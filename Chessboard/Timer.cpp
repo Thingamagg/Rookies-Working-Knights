@@ -11,7 +11,7 @@
     :
     lcd(rs, en, d4, d5, d6, d7)
     {
-    _buttonWhite = buttonWhite ;
+    _buttonWhite = buttonWhite;
     _buttonBlack = buttonBlack;
     _analogPin = analogPin;
     _rs = rs;
@@ -631,7 +631,7 @@
     EEPROM.write(4, sidePlayer);
   }
 
-  void Timer::init() {
+  void Timer::initTimer() {
     //setup pins
     pinMode(_buttonWhite, INPUT); //button white
     pinMode(_buttonBlack, INPUT); //button black
@@ -676,7 +676,7 @@
 
 
 //Arduino loop
-  void Timer::looping() {
+  void Timer::loopTimer() {
   
     adc_key_in = analogRead(_analogPin); //read keypad
   
