@@ -62,7 +62,7 @@
 //set up menu
   void Timer::menuSetUp() {
     lcd_key = read_lcd_buttons();  // read the buttons
-    switch (Timer::lcd_key)               // depending on which button was pushed, we perform an action
+    switch (lcd_key)               // depending on which button was pushed, we perform an action
     {
       case btnRIGHT:
         {
