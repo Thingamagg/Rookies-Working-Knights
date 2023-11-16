@@ -7,18 +7,27 @@
 #include <EEPROM.h>
 
 
-  Timer::Timer(const int rs = 12, const int en = 11, const int d4 = 5, const int d5 = 4, const int d6 = 3, const int d7 = 2)
+  Timer::Timer(int rs, int en, int d4, int d5, int d6, int d7, int buttonWhite, int buttonBlack, int analogPin)
     :
     lcd(rs, en, d4, d5, d6, d7)
     {
-    init();
+    _buttonWhite = buttonWhite ;
+    _buttonBlack = buttonBlack;
+    _analogPin = analogPin;
+    _rs = rs;
+    _en = en;
+    _d4 = d4;
+    _d5 = d5;
+    _d6 = d6;
+    _d7 = d7;
+    LiquidCrystal lcd(_rs, _en, _d4, _d5, _d6, _d7);
   } //default constructor
 
 
 
   void Timer::debounceKey() {
     while (adc_key_in < 1000) {
-      adc_key_in = analogRead(analogPin);
+      adc_key_in = analogRead(_analogPin);
     }
   }
 
@@ -28,7 +37,7 @@
 //read keypad buttons
   int Timer::read_lcd_buttons()
   {
-    adc_key_in = analogRead(analogPin);      // read the value from the sensor
+    adc_key_in = analogRead(_analogPin);      // read the value from the sensor
     // my buttons when read are centered at these valies: 0, 144, 329, 504, 741
     // we add approx 50 to those values and check to see if we are close
     if (adc_key_in > 1000) return btnNONE; // We make this the 1st option for speed reasons since it will be the most likely result
@@ -419,7 +428,7 @@
   void Timer::pauseGameWhite() {
   
     //with game paused in timer white, for exit is necessary push button black
-    while (digitalRead(buttonBlack) == 0) {
+    while (digitalRead(_buttonBlack) == 0) {
   
       //used to timer blink
       blinkTime = millis() - blinkDelay;
@@ -445,7 +454,7 @@
   void Timer::pauseGameBlack() {
 
     //with game paused in timer white, for exit is necessary push button black
-    while (digitalRead(buttonWhite) == 0) {
+    while (digitalRead(_buttonWhite) == 0) {
   
       //used to timer blink
       blinkTime = millis() - blinkDelay;
@@ -624,9 +633,9 @@
 
   void Timer::init() {
     //setup pins
-    pinMode(buttonWhite, INPUT); //button white
-    pinMode(buttonBlack, INPUT); //button black
-    pinMode(analogPin, INPUT);   //used in keypad
+    pinMode(_buttonWhite, INPUT); //button white
+    pinMode(_buttonBlack, INPUT); //button black
+    pinMode(_analogPin, INPUT);   //used in keypad
   //   pinMode(pinBuzzer, OUTPUT);  //buzzer
     pinMode(LED_BUILTIN, OUTPUT);//led pin 13
   
@@ -647,11 +656,11 @@
   
     readEeprom(); //read eeprom values and load to variables
   
-    while (exitMenu) {    //start set up menu
-      menuSetUp();        //keypad set up
-      printMenu();        //print menu values
-      printTimerWhite(); //print setup timer in left below
-    }
+//    while (exitMenu) {    //start set up menu
+//      menuSetUp();        //keypad set up
+//      printMenu();        //print menu values
+//      printTimerWhite(); //print setup timer in left below
+//    }
   
     writeEeprom(); //write values selected to eeprom
   
@@ -669,16 +678,16 @@
 //Arduino loop
   void Timer::looping() {
   
-    adc_key_in = analogRead(analogPin); //read keypad
+    adc_key_in = analogRead(_analogPin); //read keypad
   
     //push black button run white timer
-    if (digitalRead(buttonBlack)) {
+    if (digitalRead(_buttonBlack)) {
       // tone(pinBuzzer, 150, 100);
       cTemp = SEC - cSecWhite; //difference between SEC and previous seconds count
-      while (digitalRead(buttonWhite) == 0 && adc_key_in > 1000) { //if white button or any keypad pushed exit loop
+      while (digitalRead(_buttonWhite) == 0 && adc_key_in > 1000) { //if white button or any keypad pushed exit loop
         cSecWhite = SEC - cTemp; //second count for white timer
         timerWhite(); //run timer white
-        adc_key_in = analogRead(analogPin); //read keypad
+        adc_key_in = analogRead(_analogPin); //read keypad
       }
       if (adc_key_in < 1000) { //if any keypad pushed go to pause
         pauseGameWhite();
@@ -689,13 +698,13 @@
     }
   
     //push white button run black timer
-    if (digitalRead(buttonWhite)) {
+    if (digitalRead(_buttonWhite)) {
       // tone(pinBuzzer, 150, 100);
       cTemp = SEC - cSecBlack;
-      while (digitalRead(buttonBlack) == 0 && adc_key_in > 1000) {
+      while (digitalRead(_buttonBlack) == 0 && adc_key_in > 1000) {
         cSecBlack = SEC - cTemp;
         timerBlack();
-        adc_key_in = analogRead(analogPin);
+        adc_key_in = analogRead(_analogPin);
       }
       if (adc_key_in < 1000) {
         pauseGameBlack();

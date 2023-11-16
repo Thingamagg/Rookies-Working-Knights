@@ -112,6 +112,14 @@ int colour1 = 4;
 int colour2 = 3;
 int colour3 = 7;
 
+//timer variables
+const int buttonWhite = 8;
+const int buttonBlack = 9;
+// const int pinBuzzer = 10;
+const int analogPin = A1;
+
+const int rs = 12, en = 11, d4 = 5, d5 = 4, d6 = 3, d7 = 2;
+
 //CASTLING 
 bool Wcastlestart[2] = {1,1};
 bool Bcastlestart[2] = {1,1};
@@ -230,7 +238,10 @@ void updateBARray();
 
 bool colourM = 1;
 
-Timer timer;
+// timer stuff (lcd/buttons)
+// (rs, en, d4, d5, d6, d7, white button, black button, analog pin)
+Timer timer(rs, en, d4, d5, d6, d7, buttonWhite, buttonBlack, analogPin);
+
 
 void setup() {
   timer.init();

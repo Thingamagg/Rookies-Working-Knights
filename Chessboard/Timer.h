@@ -22,49 +22,8 @@
 class Timer 
 {
 
-  private:
-    //constants
-    const int buttonWhite = 8;
-    const int buttonBlack = 9;
-    // const int pinBuzzer = 10;
-    const int analogPin = A1;
-    const int rs = 12, en = 11, d4 = 5, d5 = 4, d6 = 3, d7 = 2;
-    LiquidCrystal lcd;
-    
-    //Variables for keypad and menu
-    int lcd_key = 0;
-    int adc_key_in = 0;
-    int countMenu = 0;
-    int blinkTime;
-    int initBlinkTime;
-    int blinkDelay = 500;
-    bool exitMenu = true;
-    bool sidePlayer = true;
-    bool blinkState = true;
-    
-    //Variables for seconds count
-    int cTemp = 0;
-    int cSecWhite = 0;
-    int cSecBlack = 0;
-    
-    //Increment variable
-    int setInc;
-    
-    //Variables to white timer
-    int setSecWhite;
-    int horWhite;
-    int minWhite;
-    int secWhite;
-    
-    //Variables to black timer
-    int setSecBlack;
-    int horBlack;
-    int minBlack;
-    int secBlack;
-    
-  
-  public:
-  Timer(const int rs = 12, const int en = 11, const int d4 = 5, const int d5 = 4, const int d6 = 3, const int d7 = 2);
+ public:
+  Timer(int rs, int en, int d4, int d5, int d6, int d7, int buttonWhite, int buttonBlack, int analogPin);
   
     void debounceKey();
   //keypad code by:
@@ -102,8 +61,46 @@ class Timer
   
   //Arduino loop
     void looping();
+
+    
+  private:
+    //constants
+    int _buttonWhite;
+    int _buttonBlack;
+    // const int pinBuzzer = 10;
+    int _analogPin;
+    int _rs, _en, _d4, _d5, _d6, _d7;
+    LiquidCrystal lcd;
+    
+    //Variables for keypad and menu
+    int lcd_key = 0;
+    int adc_key_in = 0;
+    int countMenu = 0;
+    int blinkTime;
+    int initBlinkTime;
+    int blinkDelay = 500;
+    bool exitMenu = true;
+    bool sidePlayer = true;
+    bool blinkState = true;
+    
+    //Variables for seconds count
+    int cTemp = 0;
+    int cSecWhite = 0;
+    int cSecBlack = 0;
+    
+    //Increment variable
+    int setInc;
+    
+    //Variables to white timer
+    int setSecWhite;
+    int horWhite;
+    int minWhite;
+    int secWhite;
+    
+    //Variables to black timer
+    int setSecBlack;
+    int horBlack;
+    int minBlack;
+    int secBlack;
 };
-
-
-
 #endif
