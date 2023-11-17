@@ -1,4 +1,5 @@
 #include <Adafruit_NeoPixel.h>
+#include "Timer.h"
 
 // wire no res = 0.32 volt reading
 // Current = 4mA
@@ -19,21 +20,21 @@
 #define Empty 13 
 
 //list what type of piece it is 
-enum PIECETYPE{
-  NONE = 0,
-  BLACK_PAWN,
-  BLACK_ROOK,
-  BLACK_BISHOP,
-  BLACK_KNIGHT,
-  BLACK_QUEEN,
-  BLACK_KING,
-  WHITE_PAWN,
-  WHITE_ROOK,
-  WHITE_BISHOP,
-  WHITE_KNIGHT,
-  WHITE_QUEEN,
-  WHITE_KING,
-};
+//enum PIECETYPE{
+//  NONE = 0,
+//  BLACK_PAWN,
+//  BLACK_ROOK,
+//  BLACK_BISHOP,
+//  BLACK_KNIGHT,
+//  BLACK_QUEEN,
+//  BLACK_KING,
+//  WHITE_PAWN,
+//  WHITE_ROOK,
+//  WHITE_BISHOP,
+//  WHITE_KNIGHT,
+//  WHITE_QUEEN,
+//  WHITE_KING,
+//};
 
 //Chess bot
 #define M 0x88
@@ -111,6 +112,14 @@ int colour1 = 4;
 int colour2 = 3;
 int colour3 = 7;
 
+//timer variables
+const int buttonWhite = 8;
+const int buttonBlack = 9;
+// const int pinBuzzer = 10;
+const int analogPin = A1;
+
+const int rs = 12, en = 11, d4 = 5, d5 = 4, d6 = 3, d7 = 2;
+
 //CASTLING 
 bool Wcastlestart[2] = {1,1};
 bool Bcastlestart[2] = {1,1};
@@ -150,16 +159,16 @@ int tile[8][8] = {                          //Tiles of the board with numbers re
   {13, 13, 13, 13, 13, 13, 13, 13}
 };
 
-PIECETYPE tiled [8][8] ={
-  {BLACK_ROOK, BLACK_KNIGHT, BLACK_BISHOP, BLACK_QUEEN, BLACK_KING, BLACK_BISHOP, BLACK_KNIGHT, BLACK_ROOK},
-  {BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN},
-  {NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE},
-  {NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE},
-  {NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE},
-  {NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE},
-  {WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN},
-  {WHITE_ROOK, WHITE_KNIGHT, WHITE_BISHOP, WHITE_QUEEN, WHITE_KING, WHITE_BISHOP, WHITE_KNIGHT, WHITE_ROOK},
-};
+//PIECETYPE tiled [8][8] ={
+//  {BLACK_ROOK, BLACK_KNIGHT, BLACK_BISHOP, BLACK_QUEEN, BLACK_KING, BLACK_BISHOP, BLACK_KNIGHT, BLACK_ROOK},
+//  {BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN},
+//  {NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE},
+//  {NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE},
+//  {NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE},
+//  {NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE},
+//  {WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN},
+//  {WHITE_ROOK, WHITE_KNIGHT, WHITE_BISHOP, WHITE_QUEEN, WHITE_KING, WHITE_BISHOP, WHITE_KNIGHT, WHITE_ROOK},
+//};
 
 //Initial chess bot
 char b[]={     
@@ -229,10 +238,16 @@ void updateBARray();
 
 bool colourM = 1;
 
+// timer stuff (lcd/buttons)
+// (rs, en, d4, d5, d6, d7, white button, black button, analog pin)
+Timer timer(rs, en, d4, d5, d6, d7, buttonWhite, buttonBlack, analogPin);
+
+
 void setup() {
+  timer.init();
   Serial.begin(115200);
   pixels.begin();
-    
+
   pinMode(columnZero, OUTPUT);
   pinMode(columnOne, OUTPUT);
   pinMode(columnTwo, OUTPUT);
@@ -269,7 +284,6 @@ void setup() {
 
   for (a = 0 ; a<8; a++) {
     for (i = 0 ; i<8; i++) { 
-
       resetCheck();
       lastPieceNumber = tile[i][a];
           
@@ -299,11 +313,9 @@ void setup() {
           digitalWrite(rowSeven, LOW);
           break;
         }
-        
       chooseAnalog(a); 
       checkV();
       tile[i][a] = pieceNumber;
-      
     }
   }
 }
@@ -314,59 +326,57 @@ void startUp() {
   int c = 32;
   int v = 32;
   if (onButton == 1){
-  for (int q; q < 32; q++) {
-    pixels.setPixelColor(z, pixels.Color(10,10,10));
-    pixels.setPixelColor(x, pixels.Color(100,100,100));   
-    z++;
-    x--;
-    pixels.show();
-    delay(20);
-  }
-  for (int q = 0; q < 32; q++) {
-    pixels.setPixelColor(c, pixels.Color(0,0,0));
-    pixels.setPixelColor(v, pixels.Color(0,0,0));   
-    c++;
-    v--;
-    pixels.show();
-    delay(20);  
-  }  
+    for (int q; q < 32; q++) {
+      pixels.setPixelColor(z, pixels.Color(10,10,10));
+      pixels.setPixelColor(x, pixels.Color(100,100,100));   
+      z++;
+      x--;
+      pixels.show();
+      delay(20);
+    }
+    for (int q = 0; q < 32; q++) {
+      pixels.setPixelColor(c, pixels.Color(0,0,0));
+      pixels.setPixelColor(v, pixels.Color(0,0,0));   
+      c++;
+      v--;
+      pixels.show();
+      delay(20);  
+    }  
   }
   else 
-     for (int q; q < 32; q++) {
-    pixels.setPixelColor(z, pixels.Color(100,0,110));
-    pixels.setPixelColor(x, pixels.Color(100,0,110));   
-    z++;
-    x--;
-    pixels.show();
-    delay(20);
-  }
-  for (int q = 0; q < 32; q++) {
-    pixels.setPixelColor(c, pixels.Color(0,0,0));
-    pixels.setPixelColor(v, pixels.Color(0,0,0));   
-    c++;
-    v--;
-    pixels.show();
-    delay(20);  
-  }
-     //Resetting to Default Once turned off
-  colour1 =4; 
-  colour2 = 3;
-  colour3 = 7;
-  for (int i = 0; i < 2; i++){
-   Wcastlestart[i] = 1;
- Bcastlestart[i] = 1;
-  }
- WKingstart = 1;
- BKingstart = 1;
- for (int i = 0; i < 8 ; i++)
- {
-  Wpawnstart[i] = 1;
- Bpawnstart[i] = 1;
- }
+    for (int q; q < 32; q++) {
+      pixels.setPixelColor(z, pixels.Color(100,0,110));
+      pixels.setPixelColor(x, pixels.Color(100,0,110));   
+      z++;
+      x--;
+      pixels.show();
+      delay(20);
+    } 
+    for (int q = 0; q < 32; q++) {
+      pixels.setPixelColor(c, pixels.Color(0,0,0));
+      pixels.setPixelColor(v, pixels.Color(0,0,0));   
+      c++;
+      v--;
+      pixels.show();
+      delay(20);  
+    }
+    //Resetting to Default Once turned off
+    colour1 =4; 
+    colour2 = 3;
+    colour3 = 7;
+    for (int i = 0; i < 2; i++){
+      Wcastlestart[i] = 1;
+      Bcastlestart[i] = 1;
+    }
+    WKingstart = 1;
+    BKingstart = 1;
+    for (int i = 0; i < 8 ; i++){
+      Wpawnstart[i] = 1;
+      Bpawnstart[i] = 1;
+    }
 }
 
 void cheatButtonCheck() {
-  
   bool lastCheatToggle = cheatToggle;
   cheatToggle = digitalRead(cheatPin);
   static bool key = 1;
@@ -393,16 +403,14 @@ void cheatButtonCheck() {
     }
     chessMatrixConverter();          
   }
-  
   else if (cheatToggle == HIGH && lastCheatToggle == LOW) {    
     Serial.println("off lights");
     blankLights();
   }
-
-  
 }
  
 void loop() {
+  timer.looping();
   lastOnState = currentOnState;
   currentOnState = digitalRead(onPin);
 
@@ -412,27 +420,23 @@ void loop() {
     blankLights();
   }
 
-if (onButton == 1) {
+  if (onButton == 1) {
   // Updates matrix to know what is on each tile
     for (a = 0 ; a<8; a++) {
-
-        if (currentOnState == HIGH && lastOnState == LOW) {
-          break;
-        }
-      
+      if (currentOnState == HIGH && lastOnState == LOW) {
+        break;
+      }    
       for (i = 0 ; i<8; i++) { 
-      
         if (currentOnState == HIGH && lastOnState == LOW) {
           onButton = !onButton;
           startUp();
           blankLights();
           break;
-        }        
-        
+        }
         checkColourButton();
         resetCheck();
         lastPieceNumber = tile[i][a];
-            
+
         switch (i) {
           case 0:
             digitalWrite(rowZero, LOW);
@@ -459,7 +463,6 @@ if (onButton == 1) {
             digitalWrite(rowSeven, LOW);
             break;
           }
-          
         chooseAnalog(a); 
         checkV();
         tile[i][a] = pieceNumber;
@@ -467,42 +470,37 @@ if (onButton == 1) {
         checkPutDown();
         lastPieceNumber = tile[i][a];
         cheatButtonCheck();        
-  
-    if (CheckFunction('W') == true) {
-      if (tile[i][a] == WKing) {
-        matrixToArray(i, a);
-        colourswap3();
-        pixels.show();
+
+        if (CheckFunction('W') == true) {
+          if (tile[i][a] == WKing) {
+            matrixToArray(i, a);
+            colourswap3();
+            pixels.show();
+          }
+        }
+        if (CheckFunction('B') == true) {
+          if (tile[i][a] == BKing) {
+            matrixToArray(i, a);
+            colourswap3();
+            pixels.show();
+          }
+        }
       }
-    }
-  
-    if (CheckFunction('B') == true) {
-      if (tile[i][a] == BKing) {
-        matrixToArray(i, a);
-        colourswap3();
-        pixels.show();
+
+      Serial.println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+
+      for (int j = 0; j < 8; j++){
+      for (int k = 0; k < 8; k++){
+        Serial.print(tile[j][k]);
+        Serial.print("\t");
       }
-    }
-  }
-
-  Serial.println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
-
-  for (int j = 0; j < 8; j++)
-  {
-    for (int k = 0; k < 8; k++)
-    {
-      
-      Serial.print(tile[j][k]);
-      Serial.print("\t");
-    }
-    Serial.println("");
-  }
-  Serial.println("++++++++++++++++++++++++++++");
-  //delay(100);        
-
+      Serial.println("");
+      }
+      Serial.println("++++++++++++++++++++++++++++");
+      //delay(100);        
     }  
 
-      if (Checkmate() == true){
+    if (Checkmate() == true){
       Serial.println("Checkmate");
       for(int i=0;i<numLights;i++){
         // pixels.Color takes RGB values, from 0,0,0 up to 255,255,255
@@ -510,8 +508,8 @@ if (onButton == 1) {
         colourswap3(); // Moderately bright green color.
         pixels.show(); // This sends the updated pixel color to the hardware.
         delay(50);
-    }
-    blankLights(); 
+      }
+      blankLights(); 
     }    
   }
 }
@@ -536,17 +534,14 @@ void resetCheck() {
 }
 
 void blankLights() {
-
-    for(int i=0;i<numLights;i++){
-      // pixels.Color takes RGB values, from 0,0,0 up to 255,255,255
-      pixels.setPixelColor(i, pixels.Color(0,0,0)); // Moderately bright green color.
-      pixels.show(); // This sends the updated pixel color to the hardware.
-    }
-  
+  for(int i=0;i<numLights;i++){
+    // pixels.Color takes RGB values, from 0,0,0 up to 255,255,255
+    pixels.setPixelColor(i, pixels.Color(0,0,0));     // Moderately bright green color.
+    pixels.show();    // This sends the updated pixel color to the hardware.
+  }  
 }
 
 void checkV() {
-
   if (pieceVoltage <= 220) {
     pieceNumber = 1;           //White Pawn           
   }
@@ -589,7 +584,6 @@ void checkV() {
 }
 
 void showMoves(int x) {
-
   switch (x) {
     case 1:
       wPawnMoves();
@@ -628,11 +622,9 @@ void showMoves(int x) {
       bKingMoves();
       break;
   }
-
 }
 
 void checkPickUp() {
-      
   if ((pieceNumber != lastPieceNumber) && pieceNumber == 13) {
     blankLights();
     Serial.print("Piece picked up: ");
@@ -661,7 +653,6 @@ void checkPutDown() {
 }
 
 void chooseAnalog(int numAnalog) {
-
   switch (numAnalog) {
     case 0:
       digitalWrite(columnZero, HIGH);
@@ -699,33 +690,26 @@ void chooseAnalog(int numAnalog) {
 }
   
 void matrixToArray(int i, int a) {
-
   // If i is even
   if (i % 2 == 0){
-  ledNumber = (i*8) + a;
+    ledNumber = (i*8) + a;
   }
   else 
-  ledNumber = (i*8) + (7-a); 
+    ledNumber = (i*8) + (7-a); 
 }
 
-bool PieceMovement(char colour, int piece, int row, int column){
-  
-bool possible = 0; 
+bool PieceMovement(char colour, int piece, int row, int column){    
+  bool possible = 0; 
+  int originalRow;
+  int originalColumn; 
 
-int originalRow;
-int originalColumn; 
-
-if ((row >= 0) && (row <= 7) && (column <= 7) && (column >= 0)){
-
+  if ((row >= 0) && (row <= 7) && (column <= 7) && (column >= 0)){
     int prevpiece = tile[row][column];
-      if (CheckFunction(colour) == false){
-        
-        tile[row][column] = piece;
-
-        if (CheckFunction(colour) == false) {
-          possible = true; 
+    if (CheckFunction(colour) == false){
+      tile[row][column] = piece;
+      if (CheckFunction(colour) == false) {
+        possible = true; 
         matrixToArray(row,column);
-
         if (prevpiece == Empty){
           if (Wenpassant[column] == true){
             colourswap3();
@@ -743,9 +727,7 @@ if ((row >= 0) && (row <= 7) && (column <= 7) && (column >= 0)){
       }
       tile[row][column] = prevpiece;  
     }
-
     else{
-
       for (int j = 0; j<8; j++) {
         for (int k = 0; k<8 ; k++) {
           if (tile[j][k] == piece) {
@@ -755,32 +737,26 @@ if ((row >= 0) && (row <= 7) && (column <= 7) && (column >= 0)){
           }
         }
       }
-    tile[row][column] = piece;   
-                
-
-    if (CheckFunction(colour) == false){
-      matrixToArray(row,column);
-          possible = true; 
-
+      tile[row][column] = piece;   
+      if (CheckFunction(colour) == false){
+        matrixToArray(row,column);
+        possible = true; 
         if (prevpiece == Empty){
           //colourswap2();
         }
-      else {
+        else {
           //colourswap3(); ???
-
         }
       }
       tile[row][column] = prevpiece;
       tile[originalRow][originalColumn] = piece;
-      
     } 
-    
   }
   if (possible == true){
-
     return true;
-  } else {
-  return false;
+  } 
+  else {
+    return false;
   }
 }
  
@@ -792,418 +768,338 @@ bool CheckFunction(char colour){      //W is white, B is black
   //Checking if White is in Check 
   if (colour == 'W'){
 
-//Run through tiles 
-  for (int column = 0; column < 8; column++){
-
-    for (int row = 0; row < 8; row++){
-
-    //Find White King
-      if (tile[row][column] == WKing){
-        
-        KingRow = row;
-        KingColumn = column;       
-      }
-      
-    //Find Black Pawn 
-       if (tile[row][column] == BPawn){
-        
-         //Check if Black Pawn is Attacking WKing
-        if ((tile[row + 1][column + 1] == WKing) || (tile[row + 1][column - 1] == WKing)) {
-
-           return true; 
+    //Run through tiles 
+    for (int column = 0; column < 8; column++){
+      for (int row = 0; row < 8; row++){
+        //Find White King
+        if (tile[row][column] == WKing){
+          KingRow = row;
+          KingColumn = column;       
         }
-      }
-      
-    //Find Black Rook
-       if (tile[row][column] == BRook){
-        
-         int BRookRow = row;
-         int BRookColumn = column;
-                 //Check if Black Rook is Attacking WKing
-          for (int j = BRookRow+1; j < 8; j++)
-          {
-           //If theres are piece leading up to the rook row from the right,
-              if (tile[j][BRookColumn] != Empty)
-            {
-                if (tile[j][BRookColumn] == WKing){
-                  //If king is in line of rook
-                     
-                  return true; 
-                }
-              //immediately terminate the for loop
-                  break;    
+        //Find Black Pawn 
+        if (tile[row][column] == BPawn){
+          //Check if Black Pawn is Attacking WKing
+          if ((tile[row + 1][column + 1] == WKing) || (tile[row + 1][column - 1] == WKing)) {
+            return true; 
+          }
+        }
+        //Find Black Rook
+        if (tile[row][column] == BRook){
+          int BRookRow = row;
+          int BRookColumn = column;
+          //Check if Black Rook is Attacking WKing
+          for (int j = BRookRow+1; j < 8; j++){
+            //If theres are piece leading up to the rook row from the right,
+            if (tile[j][BRookColumn] != Empty){
+              if (tile[j][BRookColumn] == WKing){
+                //If king is in line of rook     
+                return true; 
+              }
+                //immediately terminate the for loop
+              break;    
             }  
           }
-
           //Count from left of the rook to end of board
-           for (int j = BRookRow - 1; j >= 0; j--)
-           {
-           //If theres are piece leading up to the rook row from the right,
-              if (tile[j][BRookColumn] != Empty)
-             {  
-                //Find out if the piece is white or black (1 to 6 is white, 7 to 12 black)
-                if (tile[j][BRookColumn] == WKing){
-                     
-                  return true; 
-                }
+          for (int j = BRookRow - 1; j >= 0; j--){
+            //If theres are piece leading up to the rook row from the right,
+            if (tile[j][BRookColumn] != Empty){  
+              //Find out if the piece is white or black (1 to 6 is white, 7 to 12 black)
+              if (tile[j][BRookColumn] == WKing){     
+                return true; 
+              }
               //immediately terminate the for loop
-                  break;    
-             }
-           }
+              break;    
+            }
+          }
           //Count from rook collumn to bottom of board
-             for (int j = BRookColumn - 1; j >= 0; j--)
-           {
-           //If theres are piece below rook
-              if (tile[BRookRow][j] != Empty)
-             {
-                if (tile[BRookRow][j] == WKing){
-                     
-                  return true; 
-                }
+          for (int j = BRookColumn - 1; j >= 0; j--){
+            //If theres are piece below rook
+            if (tile[BRookRow][j] != Empty){
+              if (tile[BRookRow][j] == WKing){
+                return true; 
+              }
               //immediately terminate the for loop
-                  break;    
+              break;    
             } 
           }
           //Count from rook column to top of board
-             for (int j = BRookColumn +1; j < 8; j++)
-           {
-           //If theres are piece leading up to the rook row from the right, c
-              if (tile[BRookRow][j] != Empty)
-             {
-                if (tile[BRookRow][j] == WKing){
-
-                 return true; 
-                }
-                  break;    
+          for (int j = BRookColumn +1; j < 8; j++){
+            //If theres are piece leading up to the rook row from the right, c
+            if (tile[BRookRow][j] != Empty){
+              if (tile[BRookRow][j] == WKing){
+                return true; 
+              }
+              break;    
             }   
           }   
-     }
-      
-      //Find Black Knight 
-             if (tile[row][column] == BKnight){
+        }
+        //Find Black Knight 
+        if (tile[row][column] == BKnight){
+          //#1
+          if (tile[row+2][column+1] == WKing){
+            //Check if move fits on the board 
+            if ((row+2 <= 7) && (column+1 <= 7)){
+              return true;                                  
+            }
+          }
+          //#2  
+          if (tile[row+2][column-1] == WKing){
+            //Check if move fits on the board 
+            if ((row+2 <= 7) && (column-1 >= 0)){
+              return true; 
+            }
+          }
+          //#3
+          if (tile[row-2][column+1] == WKing){
+            //Check if move fits on the board 
+            if ((row-2 >= 0) && (column+1 <= 7)){      
+              return true; 
+            }
+          }
+          //#4
+          if (tile[row-2][column-1] == WKing){
+            //Check if move fits on the board 
+            if ((row-2 >= 0) && (column-1 >= 0)){  
+              return true; 
+            }
+          }
+          //#5
+          if (tile[row+1][column+2] == WKing){
+            //Check if move fits on the board 
+            if ((row+1 <= 7) && (column+2 <= 7)){
+              return true; 
+            }
+          }
+          //#6
+          if (tile[row-1][column+2] == WKing){
+            //Check if move fits on the board 
+            if ((row-1 >= 0) && (column+2 <= 7)){    
+              return true; 
+            }
+          }
+          //#7
+          if (tile[row-1][column-2] == WKing){
+            //Check if move fits on the board 
+            if ((row-1 >= 0) && (column-2 >= 0)){  
+              return true; 
+            }
+          }
+          //#8
+          if (tile[row+1][column-2] == WKing){
+            //Check if move fits on the board 
+            if ((row+1 <= 7) && (column-2 >= 0)){
 
-                      //#1
-                if (tile[row+2][column+1] == WKing){
-                //Check if move fits on the board 
-                  if ((row+2 <= 7) && (column+1 <= 7)){
-   
-                     return true;    
-                                            
-                  }
-                }
-                      //#2  
-                        if (tile[row+2][column-1] == WKing)
-                        {
-                      //Check if move fits on the board 
-                        if ((row+2 <= 7) && (column-1 >= 0)){
-   
-                       return true; 
-                       }
-                    }
-                       //#3
-                      if (tile[row-2][column+1] == WKing){
-                    //Check if move fits on the board 
-                      if ((row-2 >= 0) && (column+1 <= 7)){
-                           
-                        return true; 
-                     }
-                    }
-                     //#4
-                      if (tile[row-2][column-1] == WKing){
-                    //Check if move fits on the board 
-                      if ((row-2 >= 0) && (column-1 >= 0)){
-                           
-                        return true; 
-                        }
-                      }
-                       //#5
-                        if (tile[row+1][column+2] == WKing){
-                      //Check if move fits on the board 
-                        if ((row+1 <= 7) && (column+2 <= 7)){
-   
-                       return true; 
-                      }
-                        }
-                      //#6
-                        if (tile[row-1][column+2] == WKing){
-                      //Check if move fits on the board 
-                        if ((row-1 >= 0) && (column+2 <= 7)){
-                             
-                          return true; 
-                      }
-                        }
-                      //#7
-                      if (tile[row-1][column-2] == WKing){
-                      //Check if move fits on the board 
-                        if ((row-1 >= 0) && (column-2 >= 0)){
-                          
-                          return true; 
-                      }
-                        }
-                      //#8
-                      if (tile[row+1][column-2] == WKing){
-                      //Check if move fits on the board 
-                        if ((row+1 <= 7) && (column-2 >= 0)){
+            }
+          }
+        }
+        //Find Black Bishop
+        if (tile[row][column] == BBishop){
 
-                         }
-                        }
-             }
-      //Find Black Bishop
-      if (tile[row][column] == BBishop){
-
-        int bishopRow = row;
-        int bishopColumn = column; 
-
-              for (int j = bishopRow+1; j <= 7; j++)
-              {
-                      if (tile[j][bishopColumn +j - bishopRow] != Empty)
-                    {
-                        if (tile[j][bishopColumn+j - bishopRow] == WKing){            
-                           return true; 
-                        }
-                        break;    
-                    }
+          int bishopRow = row;
+          int bishopColumn = column; 
+          for (int j = bishopRow+1; j <= 7; j++){
+            if (tile[j][bishopColumn +j - bishopRow] != Empty){
+              if (tile[j][bishopColumn+j - bishopRow] == WKing){            
+                return true; 
               }
-              for (int j = bishopRow+1; j <= 7; j++){
-
-                      if (bishopColumn - j + bishopRow >= 0){
-                      if (tile[j][bishopColumn - j + bishopRow] != Empty)
-                    {
-                        if (tile[j][bishopColumn - j + bishopRow] == WKing){
-                           return true; 
-                        }
-                      //immediately terminate the for loop
-                        break;    
-                    }
-                  }   
-              }  
-               for (int j = bishopRow - 1; j >= 0; j--)
-               {
-                  if (bishopColumn + j - bishopRow >= 0){
-                    if (tile[j][bishopColumn +j -bishopRow] != Empty)
-                   {  
-                      if (tile[j][bishopColumn +j -bishopRow] == WKing){
-                       return true;           
-                      }
-                    //immediately terminate the for loop
-                      break;    
-                    }
-                 }
-               }
-               for (int j = bishopRow - 1; j >= 0; j--){
-                    if (tile[j][bishopColumn- j + bishopRow] != Empty)
-                  {
-                      if (tile[j][bishopColumn- j + bishopRow] == WKing){
-                        return true; 
-                        
-                      }
-                    //immediately terminate the for loop
-                      break;    
-                  }
-                }     
-            /**************************** UP TO DOWN*******************/
-                 for (int j = bishopColumn - 1; j >= 0; j--)
-               {
-                 if (bishopRow + j - bishopColumn >= 0){
-                    if (tile[bishopRow+j-bishopColumn][j] != Empty)
-                   {
-                      if (tile[bishopRow+j-bishopColumn][j] == WKing){
-                        return true; 
-                        
-                      }
-                    //immediately terminate the for loop
-                      break;    
-                   }
+              break;    
+            }
+          } 
+          for (int j = bishopRow+1; j <= 7; j++){
+            if (bishopColumn - j + bishopRow >= 0){
+              if (tile[j][bishopColumn - j + bishopRow] != Empty){
+                if (tile[j][bishopColumn - j + bishopRow] == WKing){
+                  return true; 
                 }
-               }
-                 for (int j = bishopColumn - 1; j >= 0; j--){
-                    if (tile[bishopRow -j+bishopColumn][j] != Empty)
-                  {
-                      if (tile[bishopRow -j+bishopColumn][j] == WKing){
-                        return true; 
-                        
-                      }
-                    //immediately terminate the for loop
-                      break;    
-                  }
-                }      
-                 for (int j = bishopColumn +1; j <= 7; j++)
-               {
-                  if (tile[bishopRow+j-bishopColumn][j] != Empty)
-                 {
-                    if (tile[bishopRow+j-bishopColumn][j] == WKing){
-                          return true; 
-                        
-                    }
-                      break;    
-                }
-               } 
-               for (int j = bishopColumn +1; j <= 7; j++){
-                 if (bishopRow - j + bishopColumn >= 0){
-                    if (tile[bishopRow -j+bishopColumn][j] != Empty)
-                  {
-                      if (tile[bishopRow -j+bishopColumn][j] == WKing){
-                        return true;
-                      }
-                    //immediately terminate the for loop
-                      break;    
-                  }
-                }     
+                //immediately terminate the for loop
+                break;    
               }
-      }
-      //Find Black Queen 
-      if (tile[row][column] == BQueen){
+            }   
+          }  
+          for (int j = bishopRow - 1; j >= 0; j--){
+            if (bishopColumn + j - bishopRow >= 0){
+              if (tile[j][bishopColumn +j -bishopRow] != Empty){  
+                if (tile[j][bishopColumn +j -bishopRow] == WKing){
+                  return true;           
+                }
+                //immediately terminate the for loop
+                break;    
+              }
+            }
+          }
+          for (int j = bishopRow - 1; j >= 0; j--){
+            if (tile[j][bishopColumn- j + bishopRow] != Empty){
+              if (tile[j][bishopColumn- j + bishopRow] == WKing){
+                return true;    
+              }
+              //immediately terminate the for loop
+              break;    
+            }
+          }     
+      /**************************** UP TO DOWN*******************/
+          for (int j = bishopColumn - 1; j >= 0; j--){
+            if (bishopRow + j - bishopColumn >= 0){
+              if (tile[bishopRow+j-bishopColumn][j] != Empty){
+                if (tile[bishopRow+j-bishopColumn][j] == WKing){
+                  return true; 
+                }
+                //immediately terminate the for loop
+                break;    
+              }
+            }
+          }
+          for (int j = bishopColumn - 1; j >= 0; j--){
+            if (tile[bishopRow -j+bishopColumn][j] != Empty){
+              if (tile[bishopRow -j+bishopColumn][j] == WKing){
+                return true;       
+              }
+              //immediately terminate the for loop
+              break;    
+            }
+          }      
+          for (int j = bishopColumn +1; j <= 7; j++){
+            if (tile[bishopRow+j-bishopColumn][j] != Empty){
+              if (tile[bishopRow+j-bishopColumn][j] == WKing){
+                return true;    
+              }
+              break;    
+            }
+          } 
+          for (int j = bishopColumn +1; j <= 7; j++){
+            if (bishopRow - j + bishopColumn >= 0){
+              if (tile[bishopRow -j+bishopColumn][j] != Empty){
+                if (tile[bishopRow -j+bishopColumn][j] == WKing){
+                  return true;
+                }
+                //immediately terminate the for loop
+                break;    
+              }
+            }     
+          }
+        }
+        //Find Black Queen 
+        if (tile[row][column] == BQueen){
 
-  int queenRow = row;
-  int queenColumn = column;
-  
-             /*************************ROOK PART******************/
+          int queenRow = row;
+          int queenColumn = column;
+         /*************************ROOK PART******************/
 
-           /****************************LEFT TO RIGHT*******************/
+         /****************************LEFT TO RIGHT*******************/
 
         //Count from right of the rook to end of board
-          for (int j = queenRow+1; j < 8; j++)
-          {
-              if (tile[j][queenColumn] != Empty)
-            {
-                if (tile[j][queenColumn] == WKing){                
-                 return true; 
-                }
+          for (int j = queenRow+1; j < 8; j++){
+            if (tile[j][queenColumn] != Empty){
+              if (tile[j][queenColumn] == WKing){                
+                return true; 
+              }
               //immediately terminate the for loop
-                  break;    
+              break;    
             }
           }
           //Count from left of the rook to end of board
-           for (int j = queenRow - 1; j >= 0; j--)
-           {
-           //If theres are piece leading up to the rook row from the right, c
-              if (tile[j][queenColumn] != Empty)
-             {  
-
-                if (tile[j][queenColumn] == WKing){                  
-                  return true; 
-                }
+          for (int j = queenRow - 1; j >= 0; j--){
+            //If theres are piece leading up to the rook row from the right, c
+            if (tile[j][queenColumn] != Empty){  
+              if (tile[j][queenColumn] == WKing){                  
+                return true; 
+              }
               //immediately terminate the for loop
-                  break;    
+              break;    
             }   
           }
-        /**************************** UP TO DOWN*******************/
-             for (int j = queenColumn - 1; j >= 0; j--)
-           {
-              if (tile[queenRow][j] != Empty)
-             {
-                if (tile[queenRow][j] == WKing){               
-                  return true; 
-                }
+  /**************************** UP TO DOWN*******************/
+          for (int j = queenColumn - 1; j >= 0; j--){
+            if (tile[queenRow][j] != Empty){
+              if (tile[queenRow][j] == WKing){               
+                return true; 
+              }
               //immediately terminate the for loop
-                  break;    
+              break;    
             }
           }
-             for (int j = queenColumn +1; j < 8; j++)
-           {
-              if (tile[queenRow][j] != Empty)
-             {
-                 if (tile[queenRow][j] == WKing){                
-                 return true;  
-                }
+          for (int j = queenColumn +1; j < 8; j++){
+            if (tile[queenRow][j] != Empty){
+              if (tile[queenRow][j] == WKing){                
+                return true;  
+              }
               //immediately terminate the for loop
-                  break;    
+              break;    
             }   
           }
-            /****************************BISHOP PART*******************/
+          /****************************BISHOP PART*******************/
           /****************************LEFT TO RIGHT*******************/
-          for (int j = queenRow+1; j <= 7; j++)
-          {
-                if (tile[j][queenColumn+j - queenRow] != Empty)
-              {
-                  if (tile[j][queenColumn+j - queenRow] == WKing){
-                      return true; 
-                  
-                  }
-                //immediately terminate the for loop
-                  break;    
+          for (int j = queenRow+1; j <= 7; j++){
+            if (tile[j][queenColumn+j - queenRow] != Empty){
+              if (tile[j][queenColumn+j - queenRow] == WKing){
+                return true;  
               }
+              //immediately terminate the for loop
+              break;    
             }
-           for (int j = queenRow+1; j <= 7; j++){
-                if (tile[j][queenColumn- j + queenRow] != Empty)
-              {
-                  if (tile[j][queenColumn- j + queenRow] == WKing){                  
-                    return true; 
-                    
-                  }
-                //immediately terminate the for loop
-                  break;    
-              }
-            }     
-           for (int j = queenRow - 1; j >= 0; j--)
-           {
-                if (tile[j][queenColumn+j -queenRow] != Empty)
-               {  
-                  if (tile[j][queenColumn+j -queenRow] == WKing){                  
-                      return true; 
-                    
-                  }
-                //immediately terminate the for loop
-                  break;    
-                }
-           }
-           for (int j = queenRow - 1; j >= 0; j--){
-                if (tile[j][queenColumn- j + queenRow] != Empty)
-              {
-                  if (tile[j][queenColumn- j + queenRow] == WKing){               
-                    return true; 
-                    
-                  }
-                //immediately terminate the for loop
-                  break;    
-              }
-            }   
-        /**************************** UP TO DOWN*******************/
-             for (int j = queenColumn - 1; j >= 0; j--)
-           {
-
-                if (tile[queenRow+j-queenColumn][j] != Empty)
-               {
-                    if (tile[queenRow+j-queenColumn][j] == WKing){                  
-                    return true; 
-                    
-                  }
-                //immediately terminate the for loop
-                  break;    
-               }
-           }
-           for (int j = queenColumn - 1; j >= 0; j--){
-
-                if (tile[queenRow-j+queenColumn][j] != Empty)
-              {
-                  if (tile[queenRow-j+queenColumn][j] == WKing){                  
-                        return true;        
-                  }
-                //immediately terminate the for loop
-                  break;    
-              }
-            }                
-             for (int j = queenColumn +1; j <= 7; j++)
-           {
-              if (tile[queenRow+j-queenColumn][j] != Empty)
-             {
-                if (tile[queenRow+j-queenColumn][j] == WKing){                
-                      return true; 
-                }
-                  break;    
-            }
-           }
-             for (int j = queenColumn +1; j <= 7; j++){
-                if (tile[queenRow-j+queenColumn][j] != Empty)
-              {
-                  if (tile[queenRow-j+queenColumn][j] == WKing){                 
-                    return true;
-                  }
-                  break;    
-              }
-            }            
           }
-         
+          for (int j = queenRow+1; j <= 7; j++){
+            if (tile[j][queenColumn- j + queenRow] != Empty){
+              if (tile[j][queenColumn- j + queenRow] == WKing){                  
+                return true;    
+              }
+              //immediately terminate the for loop
+              break;    
+            }
+          }     
+          for (int j = queenRow - 1; j >= 0; j--){
+            if (tile[j][queenColumn+j -queenRow] != Empty){  
+              if (tile[j][queenColumn+j -queenRow] == WKing){                  
+                return true; 
+              }
+              //immediately terminate the for loop
+              break;    
+            }
+          }
+          for (int j = queenRow - 1; j >= 0; j--){
+            if (tile[j][queenColumn- j + queenRow] != Empty){
+              if (tile[j][queenColumn- j + queenRow] == WKing){               
+                return true;     
+              }
+              //immediately terminate the for loop
+              break;    
+            }
+          }   
+          /**************************** UP TO DOWN*******************/
+          for (int j = queenColumn - 1; j >= 0; j--){
+            if (tile[queenRow+j-queenColumn][j] != Empty){
+              if (tile[queenRow+j-queenColumn][j] == WKing){                  
+                return true;       
+              }
+              //immediately terminate the for loop
+              break;    
+            }
+          }
+          for (int j = queenColumn - 1; j >= 0; j--){
+            if (tile[queenRow-j+queenColumn][j] != Empty){
+              if (tile[queenRow-j+queenColumn][j] == WKing){                  
+                return true;        
+              }
+              //immediately terminate the for loop
+              break;    
+            }
+          }                
+          for (int j = queenColumn +1; j <= 7; j++){
+            if (tile[queenRow+j-queenColumn][j] != Empty){
+              if (tile[queenRow+j-queenColumn][j] == WKing){                
+                return true; 
+              }
+              break;    
+            }
+          }
+          for (int j = queenColumn +1; j <= 7; j++){
+            if (tile[queenRow-j+queenColumn][j] != Empty){
+              if (tile[queenRow-j+queenColumn][j] == WKing){                 
+                return true;
+              }
+              break;    
+            }
+          }            
+        } 
         if (tile[row][column] == BKing) {
           //check can move up
           if (tile[row][column+1] == WKing) {
@@ -1230,404 +1126,338 @@ bool CheckFunction(char colour){      //W is white, B is black
           if (tile[row-1][column-1] == WKing) {
             return true;
           }
-        }                                        
+        }                                       
       }
     }  
   }
-  
   //If Colour is B
   if (colour == 'B'){
-      //Run through tiles 
-  for (int column = 0; column < 8; column++){
-    for (int row = 0; row < 8; row++){
-    //Find White King
-      if (tile[row][column] == BKing){
-        
-        int KingRow = row;
-        int KingColumn = column; 
-      }
-      
-    //Find White Pawn 
-       if (tile[row][column] == WPawn){
-        
-         //Check if Black Pawn is Attacking BKing
-        if ((tile[row - 1][column - 1] == BKing) || (tile[row - 1][column+ 1] == BKing)) {
-        
-           return true; 
+    //Run through tiles 
+    for (int column = 0; column < 8; column++){
+      for (int row = 0; row < 8; row++){
+        //Find White King
+        if (tile[row][column] == BKing){
+          int KingRow = row;
+          int KingColumn = column; 
         }
-      }
-      
-    //Find White Rook
-       if (tile[row][column] == WRook){
-        
-         int BRookRow = row;
-         int BRookColumn = column;
-                 //Check if Black Rook is Attacking BKing
-          for (int j = BRookRow+1; j < 8; j++)
-          {
-           //If theres are piece leading up to the rook row from the right,
-              if (tile[j][BRookColumn] != Empty)
-            {
-                if (tile[j][BRookColumn] == BKing){
-                  //If king is in line of rook
-                  return true; 
-                }
+        //Find White Pawn 
+        if (tile[row][column] == WPawn){
+          //Check if Black Pawn is Attacking BKing
+          if ((tile[row - 1][column - 1] == BKing) || (tile[row - 1][column+ 1] == BKing)) {
+            return true; 
+          }
+        }
+        //Find White Rook
+        if (tile[row][column] == WRook){ 
+          int BRookRow = row;
+          int BRookColumn = column;
+          //Check if Black Rook is Attacking BKing
+          for (int j = BRookRow+1; j < 8; j++){
+            //If theres are piece leading up to the rook row from the right,
+            if (tile[j][BRookColumn] != Empty){
+              if (tile[j][BRookColumn] == BKing){
+                //If king is in line of rook
+                return true; 
+              }
               //immediately terminate the for loop
-                  break;    
+              break;    
             }  
           }
-
           //Count from left of the rook to end of board
-           for (int j = BRookRow - 1; j >= 0; j--)
-           {
-           //If theres are piece leading up to the rook row from the right,
-              if (tile[j][BRookColumn] != Empty)
-             {  
-                //Find out if the piece is white or black (1 to 6 is white, 7 to 12 black)
-                if (tile[j][BRookColumn] == BKing){
-                  
-                  return true; 
-                }
+          for (int j = BRookRow - 1; j >= 0; j--){
+            //If theres are piece leading up to the rook row from the right,
+            if (tile[j][BRookColumn] != Empty){  
+              //Find out if the piece is white or black (1 to 6 is white, 7 to 12 black)
+              if (tile[j][BRookColumn] == BKing){
+                return true; 
+              }
               //immediately terminate the for loop
-                  break;    
-             }
-           }
+              break;    
+            }
+          }
           //Count from rook collumn to bottom of board
-             for (int j = BRookColumn - 1; j >= 0; j--)
-           {
-           //If theres are piece below rook
-              if (tile[BRookRow][j] != Empty)
-             {
-                if (tile[BRookRow][j] == BKing){
-                  return true; 
-                }
+          for (int j = BRookColumn - 1; j >= 0; j--){
+            //If theres are piece below rook
+            if (tile[BRookRow][j] != Empty){
+              if (tile[BRookRow][j] == BKing){
+                return true; 
+              }
               //immediately terminate the for loop
-                  break;    
+              break;    
             } 
           }
           //Count from rook column to top of board
-             for (int j = BRookColumn +1; j < 8; j++)
-           {
-           //If theres are piece leading up to the rook row from the right, c
-              if (tile[BRookRow][j] != Empty)
-             {
-                if (tile[BRookRow][j] == BKing){
-                 return true; 
-                }
-                  break;    
+          for (int j = BRookColumn +1; j < 8; j++){
+            //If theres are piece leading up to the rook row from the right, c
+            if (tile[BRookRow][j] != Empty){
+              if (tile[BRookRow][j] == BKing){
+                return true; 
+              }
+              break;    
             }   
           }   
-     }
-     
-      //Find White Knight 
-             if (tile[row][column] == WKnight){
-                      //#1
-                if (tile[row+2][column+1] == BKing){
-                //Check if move fits on the board 
-                  if ((row+2 <= 7) && (column+1 <= 7)){
-                     return true;                                      
-                  }
-                }
-                      //#2  
-                        if (tile[row+2][column-1] == BKing)
-                        {
-                      //Check if move fits on the board 
-                        if ((row+2 <= 7) && (column-1 >= 0)){
-
-                       return true; 
-                       }
-                    }
-                       //#3
-                      if (tile[row-2][column+1] == BKing){
-                    //Check if move fits on the board 
-                      if ((row-2 >= 0) && (column+1 <= 7)){
-                        return true; 
-                     }
-                    }
-                     //#4
-                      if (tile[row-2][column-1] == BKing){
-                    //Check if move fits on the board 
-                      if ((row-2 >= 0) && (column-1 >= 0)){
-                        return true; 
-                        }
-                      }
-                       //#5
-                        if (tile[row+1][column+2] == BKing){
-                      //Check if move fits on the board 
-                        if ((row+1 <= 7) && (column+2 <= 7)){
-
-                       return true; 
-                      }
-                        }
-                      //#6
-                        if (tile[row-1][column+2] == BKing){
-                      //Check if move fits on the board 
-                        if ((row-1 >= 0) && (column+2 <= 7)){
-                          return true; 
-                      }
-                        }
-                      //#7
-                      if (tile[row-1][column-2] == BKing){
-                      //Check if move fits on the board 
-                        if ((row-1 >= 0) && (column-2 >= 0)){
-                          return true; 
-                      }
-                        }
-                      //#8
-                      if (tile[row+1][column-2] == BKing){
-                      //Check if move fits on the board 
-                        if ((row+1 <= 7) && (column-2 >= 0)){
-                          return true;
-                         }
-                        }
-             }
-      //Find White Bishop
-      if (tile[row][column] == WBishop){
-
-        int bishopRow = row;
-        int bishopColumn = column; 
-               for (int j = bishopRow+1; j <= 7; j++)
-              {
-                      if (tile[j][bishopColumn +j - bishopRow] != Empty)
-                    {
-                        if (tile[j][bishopColumn+j - bishopRow] == BKing){            
-                           return true; 
-                        }
-                        break;    
-                    }
-              }
-              for (int j = bishopRow+1; j <= 7; j++){
-
-                      if (bishopColumn - j + bishopRow >= 0){
-                      if (tile[j][bishopColumn - j + bishopRow] != Empty)
-                    {
-                        if (tile[j][bishopColumn - j + bishopRow] == BKing){
-                           return true; 
-                        }
-                      //immediately terminate the for loop
-                        break;    
-                    }
-                  }   
-              }  
-               for (int j = bishopRow - 1; j >= 0; j--)
-               {
-                  if (bishopColumn + j - bishopRow >= 0){
-                    if (tile[j][bishopColumn +j -bishopRow] != Empty)
-                   {  
-                      if (tile[j][bishopColumn +j -bishopRow] == BKing){
-                       return true;           
-                      }
-                    //immediately terminate the for loop
-                      break;    
-                    }
-                 }
-               }
-               for (int j = bishopRow - 1; j >= 0; j--){
-                    if (tile[j][bishopColumn- j + bishopRow] != Empty)
-                  {
-                      if (tile[j][bishopColumn- j + bishopRow] == BKing){
-                        return true; 
-                        
-                      }
-                    //immediately terminate the for loop
-                      break;    
-                  }
-                }     
-            /**************************** UP TO DOWN*******************/
-                 for (int j = bishopColumn - 1; j >= 0; j--)
-               {
-                 if (bishopRow + j - bishopColumn >= 0){
-                    if (tile[bishopRow+j-bishopColumn][j] != Empty)
-                   {
-                      if (tile[bishopRow+j-bishopColumn][j] == BKing){
-                        return true; 
-                        
-                      }
-                    //immediately terminate the for loop
-                      break;    
-                   }
-                }
-               }
-                 for (int j = bishopColumn - 1; j >= 0; j--){
-                    if (tile[bishopRow -j+bishopColumn][j] != Empty)
-                  {
-                      if (tile[bishopRow -j+bishopColumn][j] == BKing){
-                        return true; 
-                        
-                      }
-                    //immediately terminate the for loop
-                      break;    
-                  }
-                }      
-                 for (int j = bishopColumn +1; j <= 7; j++)
-               {
-                  if (tile[bishopRow+j-bishopColumn][j] != Empty)
-                 {
-                    if (tile[bishopRow+j-bishopColumn][j] == BKing){
-                          return true; 
-                        
-                    }
-                      break;    
-                }
-               } 
-               for (int j = bishopColumn +1; j <= 7; j++){
-                 if (bishopRow - j + bishopColumn >= 0){
-                    if (tile[bishopRow -j+bishopColumn][j] != Empty)
-                  {
-                      if (tile[bishopRow -j+bishopColumn][j] == BKing){
-                        return true;
-                      }
-                    //immediately terminate the for loop
-                      break;    
-                  }
-                }     
-              }
-      }
-      //Find White Queen 
-      if (tile[row][column] == WQueen){
-
-  int queenRow = row;
-  int queenColumn = column;
-  
-             /*************************ROOK PART******************/
-
-          for (int j = queenRow+1; j < 8; j++)
-          {
-              if (tile[j][queenColumn] != Empty)
-            {
-                if (tile[j][queenColumn] == BKing){
-                 return true; 
-                }
-              //immediately terminate the for loop
-                  break;    
+        }
+        //Find White Knight 
+        if (tile[row][column] == WKnight){
+          //#1
+          if (tile[row+2][column+1] == BKing){
+            //Check if move fits on the board 
+            if ((row+2 <= 7) && (column+1 <= 7)){
+              return true;                                      
+            }
+          } 
+          //#2  
+          if (tile[row+2][column-1] == BKing){
+            //Check if move fits on the board 
+            if ((row+2 <= 7) && (column-1 >= 0)){
+              return true; 
             }
           }
-           for (int j = queenRow - 1; j >= 0; j--)
-           {
-              if (tile[j][queenColumn] != Empty)
-             {  
-                if (tile[j][queenColumn] == BKing){
-                  return true; 
-                }
-              //immediately terminate the for loop
-                  break;    
-            }   
-          }
-        /**************************** UP TO DOWN*******************/
-             for (int j = queenColumn - 1; j >= 0; j--)
-           {
-              if (tile[queenRow][j] != Empty)
-             {
-                if (tile[queenRow][j] == BKing){
-                  return true; 
-                }
-              //immediately terminate the for loop
-                  break;    
+          //#3
+          if (tile[row-2][column+1] == BKing){
+            //Check if move fits on the board 
+            if ((row-2 >= 0) && (column+1 <= 7)){
+              return true; 
             }
-
           }
-             for (int j = queenColumn +1; j < 8; j++)
-           {
-              if (tile[queenRow][j] != Empty)
-             {
-                 if (tile[queenRow][j] == BKing){
-                 return true;  
-                }
-              //immediately terminate the for loop
-                  break;    
-            }   
+          //#4
+          if (tile[row-2][column-1] == BKing){
+            //Check if move fits on the board 
+            if ((row-2 >= 0) && (column-1 >= 0)){
+              return true; 
+            }
           }
-            /****************************BISHOP PART*******************/
-          for (int j = queenRow+1; j <= 7; j++)
-          {
-                if (tile[j][queenColumn+j - queenRow] != Empty)
-              {
-                  if (tile[j][queenColumn+j - queenRow] == BKing){
-                    //Turn on led to signify that you can take the piece   
-                      return true; 
-                  }
-                //immediately terminate the for loop
-                  break;    
+          //#5
+          if (tile[row+1][column+2] == BKing){
+            //Check if move fits on the board 
+            if ((row+1 <= 7) && (column+2 <= 7)){
+              return true; 
+            }
+          }
+          //#6
+          if (tile[row-1][column+2] == BKing){
+            //Check if move fits on the board 
+            if ((row-1 >= 0) && (column+2 <= 7)){
+              return true; 
+            }
+          }
+          //#7
+          if (tile[row-1][column-2] == BKing){
+            //Check if move fits on the board 
+            if ((row-1 >= 0) && (column-2 >= 0)){
+              return true; 
+            }
+          }
+          //#8
+          if (tile[row+1][column-2] == BKing){
+            //Check if move fits on the board 
+            if ((row+1 <= 7) && (column-2 >= 0)){
+              return true;
+            }
+          }
+        }
+        //Find White Bishop
+        if (tile[row][column] == WBishop){
+          int bishopRow = row;
+          int bishopColumn = column; 
+          for (int j = bishopRow+1; j <= 7; j++){
+            if (tile[j][bishopColumn +j - bishopRow] != Empty){
+              if (tile[j][bishopColumn+j - bishopRow] == BKing){            
+                return true; 
               }
+              break;    
+            }
           }
-          for (int j = queenRow+1; j <= 7; j++){
-                if (tile[j][queenColumn- j + queenRow] != Empty)
-              {
-                  if (tile[j][queenColumn- j + queenRow] == BKing){
-                    return true; 
-                    }                  
+          for (int j = bishopRow+1; j <= 7; j++){
+            if (bishopColumn - j + bishopRow >= 0){
+              if (tile[j][bishopColumn - j + bishopRow] != Empty){
+                if (tile[j][bishopColumn - j + bishopRow] == BKing){
+                  return true; 
+                }
                 //immediately terminate the for loop
-                  break;    
+                break;    
+              }
+            }   
+          }  
+          for (int j = bishopRow - 1; j >= 0; j--){
+            if (bishopColumn + j - bishopRow >= 0){
+              if (tile[j][bishopColumn +j -bishopRow] != Empty){  
+                if (tile[j][bishopColumn +j -bishopRow] == BKing){
+                  return true;           
+                }
+                //immediately terminate the for loop
+                break;    
+              }
+            }
+          }
+          for (int j = bishopRow - 1; j >= 0; j--){
+            if (tile[j][bishopColumn- j + bishopRow] != Empty){
+              if (tile[j][bishopColumn- j + bishopRow] == BKing){
+                return true;     
+              }
+              //immediately terminate the for loop
+              break;    
+            }
+          }     
+          /**************************** UP TO DOWN*******************/
+          for (int j = bishopColumn - 1; j >= 0; j--){
+            if (bishopRow + j - bishopColumn >= 0){
+              if (tile[bishopRow+j-bishopColumn][j] != Empty){
+                if (tile[bishopRow+j-bishopColumn][j] == BKing){
+                  return true;       
+                }
+                //immediately terminate the for loop
+                break;    
+              }
+            }
+          }
+          for (int j = bishopColumn - 1; j >= 0; j--){
+            if (tile[bishopRow -j+bishopColumn][j] != Empty){
+              if (tile[bishopRow -j+bishopColumn][j] == BKing){
+                return true;           
+              }
+              //immediately terminate the for loop
+              break;    
+            }
+          }      
+          for (int j = bishopColumn +1; j <= 7; j++){
+            if (tile[bishopRow+j-bishopColumn][j] != Empty){
+              if (tile[bishopRow+j-bishopColumn][j] == BKing){
+                return true;           
+              }
+              break;    
+            }
+          } 
+          for (int j = bishopColumn +1; j <= 7; j++){
+            if (bishopRow - j + bishopColumn >= 0){
+              if (tile[bishopRow -j+bishopColumn][j] != Empty){
+                if (tile[bishopRow -j+bishopColumn][j] == BKing){
+                  return true;
+                }
+                //immediately terminate the for loop
+                break;    
               }
             }     
-           for (int j = queenRow - 1; j >= 0; j--)
-           {
-                if (tile[j][queenColumn+j -queenRow] != Empty)
-               {  
-                  if (tile[j][queenColumn+j -queenRow] == BKing){
-
-                      return true; 
-                    
-                  }
-                //immediately terminate the for loop
-                  break;    
-                }
-           }
-           for (int j = queenRow - 1; j >= 0; j--){
-                if (tile[j][queenColumn- j + queenRow] != Empty)
-              {
-                  if (tile[j][queenColumn- j + queenRow] == BKing){
-
-                    return true;    
-                  }
-                //immediately terminate the for loop
-                  break;    
-              }
-            }   
-        /**************************** UP TO DOWN*******************/
-             for (int j = queenColumn - 1; j >= 0; j--)
-           {
-                if (tile[queenRow+j-queenColumn][j] != Empty)
-               {
-                if (tile[queenRow+j-queenColumn][j] == BKing){
-                    return true;     
-                  }
-                //immediately terminate the for loop
-                  break;    
-               }
-           }
-           for (int j = queenColumn - 1; j >= 0; j--){
-                if (tile[queenRow-j+queenColumn][j] != Empty)
-              {
-                  if (tile[queenRow-j+queenColumn][j] == BKing){
-                        return true;
-                  }
-                //immediately terminate the for loop
-                  break;    
-              }
-            }                
-             for (int j = queenColumn +1; j <= 7; j++)
-           {
-              if (tile[queenRow+j-queenColumn][j] != Empty)
-             {
-                if (tile[queenRow+j-queenColumn][j] == BKing){
-                      return true; 
-                    }
-                }
-              //immediately terminate the for loop
-                  break;    
-            }
-           for (int j = queenColumn +1; j <= 7; j++){
-                if (tile[queenRow-j+queenColumn][j] != Empty)
-              {
-                  if (tile[queenRow-j+queenColumn][j] == BKing){
-                    return true;
-                  }
-                //immediately terminate the for loop
-                  break;    
-              }
-            }            
           }
+        }
+        //Find White Queen 
+        if (tile[row][column] == WQueen){
+          int queenRow = row;
+          int queenColumn = column;        
+          /*************************ROOK PART******************/
+          for (int j = queenRow+1; j < 8; j++){
+            if (tile[j][queenColumn] != Empty){
+              if (tile[j][queenColumn] == BKing){
+                return true; 
+              }
+              //immediately terminate the for loop
+              break;    
+            }
+          }
+          for (int j = queenRow - 1; j >= 0; j--){
+            if (tile[j][queenColumn] != Empty){  
+              if (tile[j][queenColumn] == BKing){
+                return true; 
+              }
+              //immediately terminate the for loop
+              break;    
+            }   
+          }
+          /**************************** UP TO DOWN*******************/
+          for (int j = queenColumn - 1; j >= 0; j--){
+            if (tile[queenRow][j] != Empty){
+              if (tile[queenRow][j] == BKing){
+                return true; 
+              }
+              //immediately terminate the for loop
+              break;    
+            }
+          }
+          for (int j = queenColumn +1; j < 8; j++){
+            if (tile[queenRow][j] != Empty){
+              if (tile[queenRow][j] == BKing){
+                return true;  
+              }
+              //immediately terminate the for loop
+              break;    
+            }   
+          }
+          /****************************BISHOP PART*******************/
+          for (int j = queenRow+1; j <= 7; j++){
+            if (tile[j][queenColumn+j - queenRow] != Empty){
+              if (tile[j][queenColumn+j - queenRow] == BKing){
+                //Turn on led to signify that you can take the piece   
+                return true; 
+              }
+              //immediately terminate the for loop
+              break;    
+            }
+          }
+          for (int j = queenRow+1; j <= 7; j++){
+            if (tile[j][queenColumn- j + queenRow] != Empty){
+              if (tile[j][queenColumn- j + queenRow] == BKing){
+                return true; 
+              }                  
+              //immediately terminate the for loop
+              break;    
+            }
+           }     
+          for (int j = queenRow - 1; j >= 0; j--){
+            if (tile[j][queenColumn+j -queenRow] != Empty){  
+              if (tile[j][queenColumn+j -queenRow] == BKing){
+                return true;     
+              }
+              //immediately terminate the for loop
+              break;    
+            }
+          }
+          for (int j = queenRow - 1; j >= 0; j--){
+            if (tile[j][queenColumn- j + queenRow] != Empty){
+              if (tile[j][queenColumn- j + queenRow] == BKing){
+                return true;    
+              }
+              //immediately terminate the for loop
+              break;    
+            }
+          }   
+        /**************************** UP TO DOWN*******************/
+          for (int j = queenColumn - 1; j >= 0; j--){
+            if (tile[queenRow+j-queenColumn][j] != Empty){
+              if (tile[queenRow+j-queenColumn][j] == BKing){
+                return true;     
+              }
+                //immediately terminate the for loop
+                break;    
+            }
+          }
+          for (int j = queenColumn - 1; j >= 0; j--){
+            if (tile[queenRow-j+queenColumn][j] != Empty){
+              if (tile[queenRow-j+queenColumn][j] == BKing){
+                return true;
+              }
+              //immediately terminate the for loop
+              break;    
+            }
+          }                
+          for (int j = queenColumn +1; j <= 7; j++){
+            if (tile[queenRow+j-queenColumn][j] != Empty){
+              if (tile[queenRow+j-queenColumn][j] == BKing){
+                return true; 
+              }
+            }
+            //immediately terminate the for loop
+            break;    
+          }
+          for (int j = queenColumn +1; j <= 7; j++){
+            if (tile[queenRow-j+queenColumn][j] != Empty){
+              if (tile[queenRow-j+queenColumn][j] == BKing){
+                return true;
+              }
+              //immediately terminate the for loop
+              break;    
+            }
+          }            
+        }
         if (tile[row][column] == WKing) {
           //check can move up
           if (tile[row][column+1] == BKing) {
@@ -1655,67 +1485,65 @@ bool CheckFunction(char colour){      //W is white, B is black
             return true;
           }
         }
-       
       }
     }
   }
- //If Nothing is putting king in check
-return false; 
+  //If Nothing is putting king in check
+  return false; 
 }
+
 bool wPawnMoves() { // moves forward 1 if empty, Move diagonal if enemy, move 2 if start
   /* 'i' is row number, 'a' is column number*/
+  bool possiblemoves = false;
+  enpassant();
 
-bool possiblemoves = false;
-enpassant();
-  
-//Simple Move Forward if "13" (Empty Space) 
-    if (tile[i-1][a] == Empty) {    
-     PieceMovement('W',WPawn,i-1,a);
-     if (PieceMovement('W',WPawn,i-1,a) == true){
-       possiblemoves = true; 
-     }
+  //Simple Move Forward if "13" (Empty Space) 
+  if (tile[i-1][a] == Empty) {    
+    PieceMovement('W',WPawn,i-1,a);
+    if (PieceMovement('W',WPawn,i-1,a) == true){
+      possiblemoves = true; 
     }
+  }
   //If black pawn diagonal to white pawn 
-    if ((tile[i-1][a+1] > 6) && (tile[i-1][a+1] != Empty)) {
-     PieceMovement('W',WPawn,i-1,a+1);
-       if  (PieceMovement('W',WPawn,i-1,a+1) == true){
-       possiblemoves = true; 
-     }
-      }
-   
-    if ((tile[i-1][a-1] > 6) && (tile[i-1][a-1] != Empty)) {
-       if  (PieceMovement('W',WPawn,i-1,a-1) == true){
-       possiblemoves = true; 
-     }
+  if ((tile[i-1][a+1] > 6) && (tile[i-1][a+1] != Empty)) {
+    PieceMovement('W',WPawn,i-1,a+1);
+    if (PieceMovement('W',WPawn,i-1,a+1) == true){
+      possiblemoves = true; 
     }
+  }
+   
+  if ((tile[i-1][a-1] > 6) && (tile[i-1][a-1] != Empty)) {
+    if (PieceMovement('W',WPawn,i-1,a-1) == true){
+      possiblemoves = true; 
+    }
+  }
     
   //If at the start of game, possible to move twice 
-    if (i == 6 && ((tile[i-1][a]) == Empty) && (tile[i-2][a]) == Empty) {
-   PieceMovement('W',WPawn,i-2,a);
-   if  (PieceMovement('W',WPawn,i-2,a) == true){
-       possiblemoves = true; 
-     }
+  if (i == 6 && ((tile[i-1][a]) == Empty) && (tile[i-2][a]) == Empty) {
+  PieceMovement('W',WPawn,i-2,a);
+    if (PieceMovement('W',WPawn,i-2,a) == true){
+      possiblemoves = true; 
     }
+  }
   
   //Setting Up En Passant (if pawn has moved twice and its the start, enable en passant 
   if ((i == 3) ){
-    
-    if  ((Benpassant[a+1] == 1)){
+    if ((Benpassant[a+1] == 1)){
       PieceMovement('W',WPawn,i-1,a+1);
-      if  ( PieceMovement('W',WPawn,i-1,a+1) == true){
-       possiblemoves = true; 
-     }
-  }
-     if  (Benpassant[a-1] == 1) {
+      if ( PieceMovement('W',WPawn,i-1,a+1) == true){
+        possiblemoves = true; 
+      }
+    }
+    if (Benpassant[a-1] == 1) {
       PieceMovement('W',WPawn,i-1,a-1);
-      if  (PieceMovement('W',WPawn,i-1,a-1) == true){
-       possiblemoves = true; 
-     }
+      if (PieceMovement('W',WPawn,i-1,a-1) == true){
+        possiblemoves = true; 
+      }
     } 
   }
   //If pawn not at the start, change to 0 (THIS HAS TO BE AFTER THE EN PASSANT CHECK OTHERWISE IT WONT WORK)
   if (i != 6){
-  Wpawnstart[a] = 0;
+    Wpawnstart[a] = 0;
   }
   //Used to see if game is checkmate
   if (possiblemoves == true){
@@ -1726,55 +1554,54 @@ enpassant();
 }
 
 bool bPawnMoves() { // moves forward 1 if empty, Move diagonal if enemy, move 2 if start Returns true if possible, Returns false if not (USED FOR CHECKMATE)
-bool possiblemoves = false;
-
+  bool possiblemoves = false;
   enpassant();
   //Simple Move up fowards if empty space
-    if ((tile[i+1][a] == Empty)) {
-   PieceMovement('B',BPawn,i+1,a);
- if (PieceMovement('B',BPawn,i+1,a) == true){
-       possiblemoves = true; 
-     }    }
-    //If white pawn diagonal to black pawn 
-    if (tile[i+1][a-1] <= 6) {
-       PieceMovement('B',BPawn,i+1,a-1);
- if (PieceMovement('B',BPawn,i+1,a-1) == true){
-       possiblemoves = true; 
-     }
-   }
-    if (tile[i+1][a+1] <= 6) {
-   PieceMovement('B',BPawn,i+1,a+1);
- if  (PieceMovement('B',BPawn,i+1,a+1)== true){
-       possiblemoves = true; 
-     }
+  if ((tile[i+1][a] == Empty)) {
+    PieceMovement('B',BPawn,i+1,a);
+    if (PieceMovement('B',BPawn,i+1,a) == true){
+      possiblemoves = true; 
+    }    
+  }
+  //If white pawn diagonal to black pawn 
+  if (tile[i+1][a-1] <= 6) {
+    PieceMovement('B',BPawn,i+1,a-1);
+    if (PieceMovement('B',BPawn,i+1,a-1) == true){
+      possiblemoves = true; 
     }
-    //If at the start of game, possible to move twice 
-    if (i == 1 && ((tile[i+1][a]) == Empty) && (tile[i+2][a]) == Empty) {
-       PieceMovement('B',BPawn,i+2,a);
- if  (PieceMovement('B',BPawn,i+2,a) == true){
-       possiblemoves = true; 
-     }
+  }
+  if (tile[i+1][a+1] <= 6) {
+    PieceMovement('B',BPawn,i+1,a+1);
+    if (PieceMovement('B',BPawn,i+1,a+1)== true){
+      possiblemoves = true; 
     }
+  }
+  //If at the start of game, possible to move twice 
+  if (i == 1 && ((tile[i+1][a]) == Empty) && (tile[i+2][a]) == Empty) {
+    PieceMovement('B',BPawn,i+2,a);
+    if (PieceMovement('B',BPawn,i+2,a) == true){
+      possiblemoves = true; 
+    }
+  }
   
    //Setting Up En Passant (if pawn has moved twice and its the start, enable en passant 
   if (i == 4) {
     if (Wenpassant[a + 1] == 1) {
-       PieceMovement('B',BPawn,i+1,a+1);
- if  (PieceMovement('B',BPawn,i+1,a+1) == true){
-       possiblemoves = true; 
-     }
+      PieceMovement('B',BPawn,i+1,a+1);
+      if  (PieceMovement('B',BPawn,i+1,a+1) == true){
+        possiblemoves = true; 
+      }
     }
-     
     if (Wenpassant[a - 1] == 1){
-       PieceMovement('B',BPawn,i+1,a-1);
- if  (PieceMovement('B',BPawn,i+1,a-1) == true){
-       possiblemoves = true; 
-     }
+      PieceMovement('B',BPawn,i+1,a-1);
+      if (PieceMovement('B',BPawn,i+1,a-1) == true){
+        possiblemoves = true; 
+      }
     }
   }
   //If pawn not at the start, change to 0 (THIS HAS TO BE AFTER THE EN PASSANT CHECK OTHERWISE IT WONT WORK)
   if (i != 1){
-  Bpawnstart[a] = 0;
+    Bpawnstart[a] = 0;
   }
   //Used to see if game is checkmate
   if (possiblemoves == true){
@@ -1785,264 +1612,246 @@ bool possiblemoves = false;
 }
 
 bool wRookMoves() {
-   
-   bool possiblemoves = 0; 
+  bool possiblemoves = 0; 
   int rookrow = i;
   int rookcolumn = a;
   /****************************LEFT TO RIGHT*******************/
 
-//Count from right of the rook to end of board
-  for (int j = rookrow+1; j < 8; j++)
-  {
-   if (tile[j][a] != 13)
-     {
-        if (tile[j][a] > 6){
-          
+  //Count from right of the rook to end of board
+  for (int j = rookrow+1; j < 8; j++){
+    if (tile[j][a] != 13){
+      if (tile[j][a] > 6){      
         PieceMovement('W',WRook,j,a);
-if  (PieceMovement('W',WRook,j,a) == true){
-       possiblemoves = true; 
-     } 
-   }
-          break;    
+        if (PieceMovement('W',WRook,j,a) == true){
+          possiblemoves = true; 
+        } 
+      }
+      break;    
     }
     else
-      PieceMovement('W',WRook,j,a);
-if  (PieceMovement('W',WRook,j,a) == true){
-       possiblemoves = true; 
-     }       }   
-  
+    PieceMovement('W',WRook,j,a);
+    if (PieceMovement('W',WRook,j,a) == true){
+      possiblemoves = true; 
+    }       
+  }   
   
   //Count from left of the rook to end of board
-   for (int j = rookrow - 1; j >= 0; j--)
-   {
-   if (tile[j][a] != 13)
-     {
-        if (tile[j][a] > 6){
+  for (int j = rookrow - 1; j >= 0; j--){
+    if (tile[j][a] != 13){
+      if (tile[j][a] > 6){
         PieceMovement('W',WRook,j,a);
-if  (PieceMovement('W',WRook,j,a) == true){
-       possiblemoves = true; 
-     }      
-       }
-          break;    
+        if (PieceMovement('W',WRook,j,a) == true){
+          possiblemoves = true; 
+        }      
+      }
+      break;    
     }
     else
-      PieceMovement('W',WRook,j,a);
-if  (PieceMovement('W',WRook,j,a) == true){
-       possiblemoves = true; 
-     }
-   }     
+    PieceMovement('W',WRook,j,a);
+    if (PieceMovement('W',WRook,j,a) == true){
+      possiblemoves = true; 
+    }
+  }     
   
-/**************************** UP TO DOWN*******************/
+  /**************************** UP TO DOWN*******************/
   //Count from rook collumn to bottom of board
-     for (int j = rookcolumn - 1; j >= 0; j--)
-   {
-  if (tile[i][j] != 13)
-     {
-        if (tile[i][j] > 6){
+  for (int j = rookcolumn - 1; j >= 0; j--){
+    if (tile[i][j] != 13){
+      if (tile[i][j] > 6){
         PieceMovement('W',WRook,i,j);
-if  (PieceMovement('W',WRook,i,j) == true){
-       possiblemoves = true; 
-     }    
-         }
-          break;    
+        if (PieceMovement('W',WRook,i,j) == true){
+          possiblemoves = true; 
+        }    
+      }
+      break;    
     }
     else
-      PieceMovement('W',WRook,i,j); 
-if  ( PieceMovement('W',WRook,i,j) == true){
-       possiblemoves = true; 
-     }  }
+    PieceMovement('W',WRook,i,j); 
+    if ( PieceMovement('W',WRook,i,j) == true){
+      possiblemoves = true; 
+    }
+  }
   //Count from rook column to top of board
-     for (int j = rookcolumn +1; j < 8; j++)
-   {
-   //If theres are piece leading up to the rook row from the right, c
-     if (tile[i][j] != 13)
-     {
-        if (tile[i][j] > 6){
+  for (int j = rookcolumn +1; j < 8; j++){
+    //If theres are piece leading up to the rook row from the right, c
+    if (tile[i][j] != 13){
+      if (tile[i][j] > 6){
         PieceMovement('W',WRook,i,j);
-if  ( PieceMovement('W',WRook,i,j)== true){
-       possiblemoves = true; 
-     }        }
-          break;    
+        if ( PieceMovement('W',WRook,i,j)== true){
+          possiblemoves = true; 
+        }
+      }
+      break;    
     }
     else
-      PieceMovement('W',WRook,i,j);
-if  (PieceMovement('W',WRook,i,j) == true){
-       possiblemoves = true; 
-     }  
-   }
+    PieceMovement('W',WRook,i,j);
+    if (PieceMovement('W',WRook,i,j) == true){
+      possiblemoves = true; 
+    }  
+  }
 
-if (possiblemoves == 1){
-
-  return true; 
-} 
-else
-
-  return false; 
-}
+  if (possiblemoves == 1){
+    return true; 
+  } 
+  else
+    return false; 
+  }
 
 bool bRookMoves() {
-     bool possiblemoves = 0; 
-    int rookrow = i;
+  bool possiblemoves = 0; 
+  int rookrow = i;
   int rookcolumn = a;
   /**************************** LEFT TO RIGHT *******************/
 
-//Count from right of the rook to end of board
-  for (int j = rookrow+1; j < 8; j++)
-  {
-   //If theres are piece leading up to the rook row from the right, c
-      if (tile[j][a] != 13)
-    {
-        if (tile[j][a] <= 6){
-      PieceMovement('B',BRook,j,a);
-if  ( PieceMovement('B',BRook,j,a)== true){
-       possiblemoves = true; 
-     }         }
+  //Count from right of the rook to end of board
+  for (int j = rookrow+1; j < 8; j++){
+  //If theres are piece leading up to the rook row from the right, c
+    if (tile[j][a] != 13){
+      if (tile[j][a] <= 6){
+        PieceMovement('B',BRook,j,a);
+        if ( PieceMovement('B',BRook,j,a)== true){
+          possiblemoves = true; 
+        }
+      }
       //immediately terminate the for loop
-          break;    
+      break;    
     }
     else
-   PieceMovement('B',BRook,j,a);
-if  ( PieceMovement('B',BRook,j,a)== true){
-       possiblemoves = true; 
-     }   }
+    PieceMovement('B',BRook,j,a);
+    if ( PieceMovement('B',BRook,j,a)== true){
+      possiblemoves = true; 
+    } 
+  }
   
   //Count from left of the rook to end of board
-   for (int j = rookrow - 1; j >= 0; j--)
-   {
+   for (int j = rookrow - 1; j >= 0; j--){
    //If theres are piece leading up to the rook row from the right, c
-      if (tile[j][a] != 13)
-     {
-           //Find out if the piece is white or black (1 to 6 is white, 7 to 12 black)
-        if (tile[j][a] <= 6){
+    if (tile[j][a] != 13){
+      //Find out if the piece is white or black (1 to 6 is white, 7 to 12 black)
+      if (tile[j][a] <= 6){
         PieceMovement('B',BRook,j,a);
-if  ( PieceMovement('B',BRook,j,a)== true){
-       possiblemoves = true; 
-     }         }
+        if ( PieceMovement('B',BRook,j,a)== true){
+          possiblemoves = true; 
+        }
+      }
       //immediately terminate the for loop
-          break;    
+      break;    
     }
     else
-      PieceMovement('B',BRook,j,a);
-if  ( PieceMovement('B',BRook,j,a)== true){
-       possiblemoves = true; 
-     }   }
+    PieceMovement('B',BRook,j,a);
+    if (PieceMovement('B',BRook,j,a)== true){
+      possiblemoves = true; 
+    }  
+  }
   
-/**************************** UP TO DOWN*******************/
+  /**************************** UP TO DOWN*******************/
 
   //Count from rook column to bottom of board
-     for (int j = rookcolumn - 1; j >= 0; j--)
-   {
-   //If theres are piece leading up to the rook row from the right, c
-      if (tile[i][j] != 13)
-    {
-        if (tile[i][j] <= 6){
+  for (int j = rookcolumn - 1; j >= 0; j--){
+    //If theres are piece leading up to the rook row from the right, c
+    if (tile[i][j] != 13){
+      if (tile[i][j] <= 6){
       PieceMovement('B',BRook,i,j);
-if  ( PieceMovement('B',BRook,i,j)== true){
-       possiblemoves = true; 
-     }         }
+        if ( PieceMovement('B',BRook,i,j)== true){
+          possiblemoves = true; 
+        }
+      }
       //immediately terminate the for loop
-          break;    
+      break;    
     }
     else
-   PieceMovement('B',BRook,i,j);
-if  ( PieceMovement('B',BRook,i,j)== true){
-       possiblemoves = true; 
-     }   }
+    PieceMovement('B',BRook,i,j);
+    if ( PieceMovement('B',BRook,i,j)== true){
+      possiblemoves = true; 
+    }  
+  }
   
   //Count from left of the rook to end of board
-   for (int j = rookcolumn + 1; j <= 7; j++)
-   {
-   //If theres are piece leading up to the rook row from the right, c
-      if (tile[i][j] != 13)
-    {
-        if (tile[i][j] <= 6){
-      PieceMovement('B',BRook,i,j);
-if  ( PieceMovement('B',BRook,i,j)== true){
-       possiblemoves = true; 
-     }         }
+   for (int j = rookcolumn + 1; j <= 7; j++){
+    //If theres are piece leading up to the rook row from the right, c
+    if (tile[i][j] != 13){
+      if (tile[i][j] <= 6){
+        PieceMovement('B',BRook,i,j);
+        if ( PieceMovement('B',BRook,i,j)== true){
+          possiblemoves = true; 
+        } 
+      }
       //immediately terminate the for loop
-          break;    
+      break;    
     }
     else
-   PieceMovement('B',BRook,i,j);
-if  ( PieceMovement('B',BRook,i,j)== true){
-       possiblemoves = true; 
-     } 
+    PieceMovement('B',BRook,i,j);
+    if ( PieceMovement('B',BRook,i,j)== true){
+      possiblemoves = true; 
+    } 
   }
   if (possiblemoves == 1){
-
-  return true; 
+    return true; 
   } 
-else
+  else
   return false; 
 }
 
 bool wKnightMoves() {
-  
   bool possiblemoves = 0;
 //Define the 8 possible moves of knight and determine whether they are possible (e.g, inside the board and not where the pieces are same colour 
-  
   //#1
   if (tile[i+2][a+1] > 6){
-     PieceMovement('W',WKnight,i+2,a+1);
-if  ( PieceMovement('W',WKnight,i+2,a+1) == true){
-       possiblemoves = true; 
+    PieceMovement('W',WKnight,i+2,a+1);
+    if ( PieceMovement('W',WKnight,i+2,a+1) == true){
+      possiblemoves = true; 
      }   
-    }
-  //#2  
-    if (tile[i+2][a-1] > 6)
-    {
-   PieceMovement('W',WKnight,i+2,a-1);
-if  (PieceMovement('W',WKnight,i+2,a-1) == true){
-       possiblemoves = true; 
-     }     
   }
-   //#3
-    if (tile[i-2][a+1] > 6){
+  //#2  
+  if (tile[i+2][a-1] > 6){
+    PieceMovement('W',WKnight,i+2,a-1);
+    if (PieceMovement('W',WKnight,i+2,a-1) == true){
+      possiblemoves = true; 
+    }     
+  }
+  //#3
+  if (tile[i-2][a+1] > 6){
     PieceMovement('W',WKnight,i-2,a+1);    
-if  (PieceMovement('W',WKnight,i-2,a+1) == true){
-       possiblemoves = true; 
-     }  
-   }
-   //#4
-    if (tile[i-2][a-1] > 6){
-  //Check if move fits on the board 
+    if (PieceMovement('W',WKnight,i-2,a+1) == true){
+      possiblemoves = true; 
+    }  
+  }
+  //#4
+  if (tile[i-2][a-1] > 6){
+    //Check if move fits on the board 
     PieceMovement('W',WKnight,i-2,a-1); 
-if  (PieceMovement('W',WKnight,i-2,a-1) == true){
-       possiblemoves = true; 
-     } 
-       }
-    
-   //#5
-    if (tile[i+1][a+2] > 6){
-   PieceMovement('W',WKnight,i+1,a+2);
-if  (PieceMovement('W',WKnight,i+1,a+2) == true){
-       possiblemoves = true; 
-     } 
+    if (PieceMovement('W',WKnight,i-2,a-1) == true){
+      possiblemoves = true; 
+    } 
+  }  
+  //#5
+  if (tile[i+1][a+2] > 6){
+    PieceMovement('W',WKnight,i+1,a+2);
+    if (PieceMovement('W',WKnight,i+1,a+2) == true){
+      possiblemoves = true; 
+    } 
   }
   //#6
-    if (tile[i-1][a+2] > 6){
-  PieceMovement('W',WKnight,i-1,a+2);
-if  (PieceMovement('W',WKnight,i-1,a+2) == true){
-       possiblemoves = true; 
-     } 
-       }
-
+  if (tile[i-1][a+2] > 6){
+    PieceMovement('W',WKnight,i-1,a+2);
+    if (PieceMovement('W',WKnight,i-1,a+2) == true){
+      possiblemoves = true; 
+    } 
+  }
   //#7
   if (tile[i-1][a-2] > 6){
-   PieceMovement('W',WKnight,i-1,a-2);
-if  (PieceMovement('W',WKnight,i-1,a-2) == true){
-       possiblemoves = true; 
-     } 
-       }
-    
+    PieceMovement('W',WKnight,i-1,a-2);
+    if (PieceMovement('W',WKnight,i-1,a-2) == true){
+      possiblemoves = true; 
+    } 
+  }  
   //#8
   if (tile[i+1][a-2] > 6){  
-  PieceMovement('W',WKnight,i+1,a-2);
-if  (PieceMovement('W',WKnight,i+1,a-2) == true){
-       possiblemoves = true; 
-     } 
-       }
+    PieceMovement('W',WKnight,i+1,a-2);
+    if (PieceMovement('W',WKnight,i+1,a-2) == true){
+      possiblemoves = true; 
+    } 
+  }
 
   //Used to see if game is checkmate
   if (possiblemoves == true){
@@ -2053,70 +1862,67 @@ if  (PieceMovement('W',WKnight,i+1,a-2) == true){
 }
 
 bool bKnightMoves() {
-     bool possiblemoves = 0;
+  bool possiblemoves = 0;
 
-//Define the 8 possible moves of knight and determine whether they are possible (e.g, inside the board and not where the pieces are same colour 
+  //Define the 8 possible moves of knight and determine whether they are possible (e.g, inside the board and not where the pieces are same colour 
   
   //#1
   if ((tile[i+2][a+1]  < 7) || (tile[i+2][a+1]  == 13)){
     PieceMovement('B',BKnight,i+2,a+1);
-if  (PieceMovement('B',BKnight,i+2,a+1) == true){
-       possiblemoves = true; 
-     } 
-            }   
+    if (PieceMovement('B',BKnight,i+2,a+1) == true){
+      possiblemoves = true; 
+    } 
+  }   
   //#2  
-    if ((tile[i+2][a-1] < 7) || (tile[i+2][a+1]  == 13))
-    {
+  if ((tile[i+2][a-1] < 7) || (tile[i+2][a+1]  == 13)){
     PieceMovement('B',BKnight,i+2,a-1);
-if  (PieceMovement('B',BKnight,i+2,a-1) == true){
-       possiblemoves = true; 
-     } 
-         }
-   //#3
-    if ((tile[i-2][a+1] < 7) || (tile[i-2][a+1] == 13))
-    { 
-   PieceMovement('B',BKnight,i-2,a+1);
-if  (PieceMovement('B',BKnight,i-2,a+1) == true){
-       possiblemoves = true; 
-     } 
-         }  
+    if (PieceMovement('B',BKnight,i+2,a-1) == true){
+      possiblemoves = true; 
+    } 
+  }
+  //#3
+  if ((tile[i-2][a+1] < 7) || (tile[i-2][a+1] == 13)){ 
+    PieceMovement('B',BKnight,i-2,a+1);
+    if (PieceMovement('B',BKnight,i-2,a+1) == true){
+      possiblemoves = true; 
+    } 
+  }  
    //#4
-    if ((tile[i-2][a-1] <7 ) || (tile[i-2][a-1] == 13)){   
+  if ((tile[i-2][a-1] <7 ) || (tile[i-2][a-1] == 13)){   
     PieceMovement('B',BKnight,i-2,a-1);
-if  (PieceMovement('B',BKnight,i-2,a-1) == true){
-       possiblemoves = true; 
-     } 
-         }
-   //#5
-    if ((tile[i+1][a+2] < 7) || (tile[i+1][a+2] == 13)){
+    if (PieceMovement('B',BKnight,i-2,a-1) == true){
+      possiblemoves = true; 
+    } 
+ }
+  //#5
+  if ((tile[i+1][a+2] < 7) || (tile[i+1][a+2] == 13)){
     PieceMovement('B',BKnight,i+1,a+2);
-if  (PieceMovement('B',BKnight,i+1,a+2) == true){
-       possiblemoves = true; 
-     } 
-         }
+    if (PieceMovement('B',BKnight,i+1,a+2) == true){
+      possiblemoves = true; 
+    } 
+ }
   //#6
     if ((tile[i-1][a+2] < 7) || (tile[i-1][a+2] == 13)){
-    PieceMovement('B',BKnight,i-1,a+2);
-if  (PieceMovement('B',BKnight,i-1,a+2) == true){
-       possiblemoves = true; 
-     } 
-         }
+      PieceMovement('B',BKnight,i-1,a+2);
+      if (PieceMovement('B',BKnight,i-1,a+2) == true){
+        possiblemoves = true; 
+      } 
+    }
   //#7
   if ((tile[i-1][a-2] < 7) || (tile[i-1][a-2] == 13)){
     PieceMovement('B',BKnight,i-1,a-2);
-if  ( PieceMovement('B',BKnight,i-1,a-2) == true){
-       possiblemoves = true; 
-     } 
-         }
+    if ( PieceMovement('B',BKnight,i-1,a-2) == true){
+      possiblemoves = true; 
+    } 
+  }
   //#8
   if ((tile[i+1][a-2] < 7) || (tile[i+1][a-2] == 13)){
-   PieceMovement('B',BKnight,i+1,a-2);
-if  (PieceMovement('B',BKnight,i+1,a-2) == true){
-       possiblemoves = true; 
-     } 
-         }
-
-      //Used to see if game is checkmate
+    PieceMovement('B',BKnight,i+1,a-2);
+    if (PieceMovement('B',BKnight,i+1,a-2) == true){
+      possiblemoves = true; 
+    } 
+  }
+  //Used to see if game is checkmate
   if (possiblemoves == true){
     return true;
   }
@@ -2125,42 +1931,37 @@ if  (PieceMovement('B',BKnight,i+1,a-2) == true){
 }
 
 bool wBishopMoves() {
-       bool possiblemoves = 0; 
-    int bishopRow = i;
+  bool possiblemoves = 0; 
+  int bishopRow = i;
   int bishopColumn = a;
 
   /****************************LEFT TO RIGHT*******************/
 
-//Count from right of the bishop to end of board
-  for (int j = bishopRow+1; j <= 7; j++)
-  {
- //Find out if the piece is white or black (1 to 6 is white, 7 to 12 black)
+  //Count from right of the bishop to end of board
+  for (int j = bishopRow+1; j <= 7; j++){
+  //Find out if the piece is white or black (1 to 6 is white, 7 to 12 black)
     if (tile[j][bishopColumn+j - bishopRow] > 6){
-
-       PieceMovement('W',WBishop,j,bishopColumn+j-bishopRow);
-if  ( PieceMovement('W',WBishop,j,bishopColumn+j-bishopRow) == true){
-       possiblemoves = true; 
-     } 
-       if (tile[j][bishopColumn + j - bishopRow] != Empty)
-      {
-    break;  
+      PieceMovement('W',WBishop,j,bishopColumn+j-bishopRow);
+      if ( PieceMovement('W',WBishop,j,bishopColumn+j-bishopRow) == true){
+        possiblemoves = true; 
+      } 
+      if (tile[j][bishopColumn + j - bishopRow] != Empty){
+        break;  
       }
     }
-    else {
+    else{
       break;
     }
   }
-   for (int j = bishopRow+1; j <= 7; j++)
-  { 
+  for (int j = bishopRow+1; j <= 7; j++){ 
     //Other Side
     if (tile[j][bishopColumn - j + bishopRow] > 6){
-  PieceMovement('W',WBishop,j,bishopColumn-j+bishopRow);
-if  (PieceMovement('W',WBishop,j,bishopColumn-j+bishopRow) == true){
-       possiblemoves = true; 
-     }       
-      if (tile[j][bishopColumn - j + bishopRow] != Empty)
-      {
-    break;  
+      PieceMovement('W',WBishop,j,bishopColumn-j+bishopRow);
+      if (PieceMovement('W',WBishop,j,bishopColumn-j+bishopRow) == true){
+        possiblemoves = true; 
+      }           
+      if (tile[j][bishopColumn - j + bishopRow] != Empty){
+        break;  
       }
     } 
     else {
@@ -2168,119 +1969,107 @@ if  (PieceMovement('W',WBishop,j,bishopColumn-j+bishopRow) == true){
     }
   }
   //Count from left of the bishop to end of board
-   for (int j = bishopRow - 1; j >= 0; j--)
-   {
- //Find out if the piece is white or black (1 to 6 is white, 7 to 12 black)
+  for (int j = bishopRow - 1; j >= 0; j--){
+    //Find out if the piece is white or black (1 to 6 is white, 7 to 12 black)
     if (tile[j][bishopColumn+j - bishopRow] > 6){
-       PieceMovement('W',WBishop,j,bishopColumn+j-bishopRow);
-if  (PieceMovement('W',WBishop,j,bishopColumn+j-bishopRow) == true){
-       possiblemoves = true; 
-     }        if (tile[j][bishopColumn + j - bishopRow] != Empty)
-      {
+      PieceMovement('W',WBishop,j,bishopColumn+j-bishopRow);
+      if (PieceMovement('W',WBishop,j,bishopColumn+j-bishopRow) == true){
+        possiblemoves = true; 
+      }
+      if (tile[j][bishopColumn + j - bishopRow] != Empty){
         //immediately terminate the for loop
-    break;  
+        break;  
       }
     }
     else {
       break;
     }   
-   }
-        for (int j = bishopRow - 1; j >= 0; j--){
+  }
+  for (int j = bishopRow - 1; j >= 0; j--){
     //Other Side
     if (tile[j][bishopColumn - j + bishopRow] > 6){
-
-  PieceMovement('W',WBishop,j,bishopColumn-j+bishopRow);
-  if  ( PieceMovement('W',WBishop,j,bishopColumn-j+bishopRow) == true){
-       possiblemoves = true; 
-     } 
-      if (tile[j][bishopColumn - j + bishopRow] != Empty)
-      {
+      PieceMovement('W',WBishop,j,bishopColumn-j+bishopRow);
+      if ( PieceMovement('W',WBishop,j,bishopColumn-j+bishopRow) == true){
+        possiblemoves = true; 
+      } 
+      if (tile[j][bishopColumn - j + bishopRow] != Empty){
         //immediately terminate the for loop
-    break;  
+        break;  
       }
     }  
     else {
       break;
     }    
-   }
+  }
    
-/**************************** UP TO DOWN*******************/
+  /**************************** UP TO DOWN*******************/
   //Count from rook collumn to bottom of board
-     for (int j = bishopColumn - 1; j >= 0; j--)
-   {
-       //Find out if the piece is white or black (1 to 6 is white, 7 to 12 black)
+  for (int j = bishopColumn - 1; j >= 0; j--){
+    //Find out if the piece is white or black (1 to 6 is white, 7 to 12 black)
     if (tile[bishopRow+j - bishopColumn][j] > 6){
-       PieceMovement('W',WBishop,bishopRow+j - bishopColumn,j);
-if  ( PieceMovement('W',WBishop,bishopRow+j - bishopColumn,j) == true){
-       possiblemoves = true; 
-     } 
-       if (tile[bishopRow+j - bishopColumn][j] != Empty)
-      {
+      PieceMovement('W',WBishop,bishopRow+j - bishopColumn,j);
+      if (PieceMovement('W',WBishop,bishopRow+j - bishopColumn,j) == true){
+        possiblemoves = true; 
+      } 
+      if (tile[bishopRow+j - bishopColumn][j] != Empty){
         //immediately terminate the for loop
-    break;  
-      }
+        break;  
+        }
     }
     else {
       break;
     }    
-   }
-         for (int j = bishopColumn - 1; j >= 0; j--){
+  }
+  for (int j = bishopColumn - 1; j >= 0; j--){
     //Other Side
     if (tile[bishopRow -j + bishopColumn][j] > 6){
-
-  PieceMovement('W',WBishop,bishopRow -j + bishopColumn,j);
-  if  ( PieceMovement('W',WBishop,bishopRow -j + bishopColumn,j) == true){
-       possiblemoves = true; 
-     } 
-      if (tile[bishopRow -j + bishopColumn][j] != Empty)
-      {
+      PieceMovement('W',WBishop,bishopRow -j + bishopColumn,j);
+      if ( PieceMovement('W',WBishop,bishopRow -j + bishopColumn,j) == true){
+        possiblemoves = true; 
+      } 
+      if (tile[bishopRow -j + bishopColumn][j] != Empty){
         //immediately terminate the for loop
-    break;  
+        break;  
       }
     }
     else {
       break;
     }     
-   }
+  }
   //Count from rook column to top of board
-     for (int j = bishopColumn +1; j <= 7; j++)
-   {
-            //Find out if the piece is white or black (1 to 6 is white, 7 to 12 black)
+  for (int j = bishopColumn +1; j <= 7; j++){
+    //Find out if the piece is white or black (1 to 6 is white, 7 to 12 black)
     if (tile[bishopRow+j - bishopColumn][j] > 6){
-       PieceMovement('W',WBishop,bishopRow+j - bishopColumn,j);
-if  (PieceMovement('W',WBishop,bishopRow+j - bishopColumn,j) == true){
-       possiblemoves = true; 
-     } 
-       if (tile[bishopRow+j - bishopColumn][j] != Empty)
-      {
+      PieceMovement('W',WBishop,bishopRow+j - bishopColumn,j);
+      if (PieceMovement('W',WBishop,bishopRow+j - bishopColumn,j) == true){
+        possiblemoves = true; 
+      } 
+      if (tile[bishopRow+j - bishopColumn][j] != Empty){
         //immediately terminate the for loop
-    break;  
+        break;  
       }
     }
     else {
       break;
     } 
-   }
-         for (int j = bishopColumn +1; j <= 7; j++)
-{   
+  }
+  for (int j = bishopColumn +1; j <= 7; j++){   
     //Other Side
     if (tile[bishopRow -j + bishopColumn][j] > 6){
-
-  PieceMovement('W',WBishop,bishopRow -j + bishopColumn,j);
-  if  (PieceMovement('W',WBishop,bishopRow -j + bishopColumn,j)== true){
-       possiblemoves = true; 
-     } 
-      if (tile[bishopRow -j + bishopColumn][j] != Empty)
-      {
+      PieceMovement('W',WBishop,bishopRow -j + bishopColumn,j);
+      if (PieceMovement('W',WBishop,bishopRow -j + bishopColumn,j)== true){
+        possiblemoves = true; 
+      } 
+      if (tile[bishopRow -j + bishopColumn][j] != Empty){
         //immediately terminate the for loop
-    break;  
+      break;  
       }
     }
     else {
       break;
     }      
- }
- if (possiblemoves == true){
+  }
+  if (possiblemoves == true){
     return true;
   }
   else
@@ -2288,46 +2077,40 @@ if  (PieceMovement('W',WBishop,bishopRow+j - bishopColumn,j) == true){
 }
 
 bool bBishopMoves() {
-      bool possiblemoves = 0; 
-
-    int bishopRow = i;
+  bool possiblemoves = 0; 
+  int bishopRow = i;
   int bishopColumn = a;
 
   /****************************LEFT TO RIGHT*******************/
 
 
-//Count from right of the bishop to end of board
-  for (int j = bishopRow+1; j <= 7; j++)
-  {
- //Find out if the piece is white or black (1 to 6 is white, 7 to 12 black)
+  //Count from right of the bishop to end of board
+  for (int j = bishopRow+1; j <= 7; j++){
+    //Find out if the piece is white or black (1 to 6 is white, 7 to 12 black)
     if ((tile[j][bishopColumn+j - bishopRow] <= 6) || (tile[j][bishopColumn+j - bishopRow] == Empty)){
-       PieceMovement('B',BBishop,j,bishopColumn+j-bishopRow);
-if  (  PieceMovement('B',BBishop,j,bishopColumn+j-bishopRow) == true){
-       possiblemoves = true; 
-     } 
-       if (tile[j][bishopColumn + j - bishopRow] != Empty)
-      {
+      PieceMovement('B',BBishop,j,bishopColumn+j-bishopRow);
+      if (  PieceMovement('B',BBishop,j,bishopColumn+j-bishopRow) == true){
+        possiblemoves = true; 
+      } 
+      if (tile[j][bishopColumn + j - bishopRow] != Empty){
         //immediately terminate the for loop
-    break;  
+        break;  
       }
     }
     else {
       break;
     }  
   }  
-    for (int j = bishopRow+1; j <= 7; j++){
-
+  for (int j = bishopRow+1; j <= 7; j++){
     //Other Side
     if ((tile[j][bishopColumn - j + bishopRow] <= 6) || (tile[j][bishopColumn-j + bishopRow] == Empty)){
-
-  PieceMovement('B',BBishop,j,bishopColumn-j+bishopRow);
-  if  ( PieceMovement('B',BBishop,j,bishopColumn-j+bishopRow) == true){
-       possiblemoves = true; 
-     } 
-      if (tile[j][bishopColumn - j + bishopRow] != Empty)
-      {
+      PieceMovement('B',BBishop,j,bishopColumn-j+bishopRow);
+      if ( PieceMovement('B',BBishop,j,bishopColumn-j+bishopRow) == true){
+        possiblemoves = true; 
+      } 
+      if (tile[j][bishopColumn - j + bishopRow] != Empty){
         //immediately terminate the for loop
-    break;  
+        break;  
       }
     }
     else {
@@ -2335,121 +2118,108 @@ if  (  PieceMovement('B',BBishop,j,bishopColumn+j-bishopRow) == true){
     }              
   }
   //Count from left of the bishop to end of board
-   for (int j = bishopRow - 1; j >= 0; j--)
-   {
- //Find out if the piece is white or black (1 to 6 is white, 7 to 12 black)
+  for (int j = bishopRow - 1; j >= 0; j--){
+  //Find out if the piece is white or black (1 to 6 is white, 7 to 12 black)
     if ((tile[j][bishopColumn+j - bishopRow] <= 6) || (tile[j][bishopColumn+j - bishopRow] == Empty)){
-       PieceMovement('B',BBishop,j,bishopColumn+j-bishopRow);
-       if  (PieceMovement('B',BBishop,j,bishopColumn+j-bishopRow) == true){
-       possiblemoves = true; 
-     } 
-
-       if (tile[j][bishopColumn + j - bishopRow] != Empty)
-      {
+      PieceMovement('B',BBishop,j,bishopColumn+j-bishopRow);
+      if (PieceMovement('B',BBishop,j,bishopColumn+j-bishopRow) == true){
+        possiblemoves = true; 
+      } 
+      if (tile[j][bishopColumn + j - bishopRow] != Empty){
         //immediately terminate the for loop
-    break;  
+        break;  
       }
     }
     else {
       break;
     }   
-   }
+  }
    
-   for (int j = bishopRow - 1; j >= 0; j--){
-
+  for (int j = bishopRow - 1; j >= 0; j--){
     //Other Side
     if ((tile[j][bishopColumn - j + bishopRow] <= 6) || (tile[j][bishopColumn - j + bishopRow] == Empty)){
-
-  PieceMovement('B',BBishop,j,bishopColumn-j+bishopRow);
-      if  ( PieceMovement('B',BBishop,j,bishopColumn-j+bishopRow) == true){
-       possiblemoves = true; 
-     } 
-      if (tile[j][bishopColumn - j + bishopRow] != Empty)
-      {
+      PieceMovement('B',BBishop,j,bishopColumn-j+bishopRow);
+      if ( PieceMovement('B',BBishop,j,bishopColumn-j+bishopRow) == true){
+        possiblemoves = true; 
+      } 
+      if (tile[j][bishopColumn - j + bishopRow] != Empty){
         //immediately terminate the for loop
-    break;  
+      break;  
       }
     }
     else {
       break;
     }      
-   }
-/**************************** UP TO DOWN*******************/ 
+  }
+  /**************************** UP TO DOWN*******************/ 
   //Count from bishgop collumn to bottom of board
-     for (int j = bishopColumn - 1; j >= 0; j--)
-   {
-       //Find out if the piece is white or black (1 to 6 is white, 7 to 12 black)
+  for (int j = bishopColumn - 1; j >= 0; j--){
+    //Find out if the piece is white or black (1 to 6 is white, 7 to 12 black)
     if ((tile[bishopRow+j - bishopColumn][j] <= 6) || (tile[bishopRow+j - bishopColumn][j] == Empty)){
-       PieceMovement('B',BBishop,bishopRow+j - bishopColumn,j);
-if  (PieceMovement('B',BBishop,bishopRow+j - bishopColumn,j) == true){
-       possiblemoves = true; 
-     } 
-       if (tile[bishopRow+j - bishopColumn][j] != Empty)
-      {
+      PieceMovement('B',BBishop,bishopRow+j - bishopColumn,j);
+      if (PieceMovement('B',BBishop,bishopRow+j - bishopColumn,j) == true){
+        possiblemoves = true; 
+      } 
+      if (tile[bishopRow+j - bishopColumn][j] != Empty){
         //immediately terminate the for loop
-    break;  
+        break;  
       }
     }
     else {
       break;
     }    
-   }
+  }
    
-        for (int j = bishopColumn - 1; j >= 0; j--){
+  for (int j = bishopColumn - 1; j >= 0; j--){
     //Other Side
     if ((tile[bishopRow -j + bishopColumn][j] <= 6) || (tile[j][bishopColumn - j + bishopRow] == Empty)){
-
-  PieceMovement('B',BBishop,bishopRow -j + bishopColumn,j);
-  if  ( PieceMovement('B',BBishop,bishopRow -j + bishopColumn,j) == true){
-       possiblemoves = true; 
-     } 
-      if (tile[bishopRow -j + bishopColumn][j] != Empty)
-      {
+      PieceMovement('B',BBishop,bishopRow -j + bishopColumn,j);
+      if ( PieceMovement('B',BBishop,bishopRow -j + bishopColumn,j) == true){
+        possiblemoves = true; 
+      } 
+      if (tile[bishopRow -j + bishopColumn][j] != Empty){
         //immediately terminate the for loop
-    break;  
+        break;  
       }
     }
     else {
       break;
     }      
-   }
+  }
   //Count from rook column to top of board
-     for (int j = bishopColumn +1; j <= 7; j++)
-   {
-            //Find out if the piece is white or black (1 to 6 is white, 7 to 12 black)
+  for (int j = bishopColumn +1; j <= 7; j++){
+    //Find out if the piece is white or black (1 to 6 is white, 7 to 12 black)
     if ((tile[bishopRow+j - bishopColumn][j] <= 6) || (tile[j][bishopColumn+j - bishopRow] == Empty)){
-       PieceMovement('B',BBishop,bishopRow+j - bishopColumn,j);
-if  ( PieceMovement('B',BBishop,bishopRow+j - bishopColumn,j) == true){
-       possiblemoves = true; 
-     } 
-       if (tile[bishopRow+j - bishopColumn][j] != Empty)
-      {
+      PieceMovement('B',BBishop,bishopRow+j - bishopColumn,j);
+      if (PieceMovement('B',BBishop,bishopRow+j - bishopColumn,j) == true){
+        possiblemoves = true; 
+      } 
+      if (tile[bishopRow+j - bishopColumn][j] != Empty){
         //immediately terminate the for loop
-    break;  
+        break;  
       }
     }
     else {
       break;
     }    
-   } 
-        for (int j = bishopColumn +1; j <= 7; j++){
+  } 
+  for (int j = bishopColumn +1; j <= 7; j++){
     //Other Side
     if ((tile[bishopRow -j + bishopColumn][j] <= 6) || (tile[j][bishopColumn - j + bishopRow] == Empty)){
-     PieceMovement('B',BBishop,bishopRow -j + bishopColumn,j);
-      if  ( PieceMovement('B',BBishop,bishopRow -j + bishopColumn,j) == true){
-       possiblemoves = true; 
-     } 
-      if (tile[bishopRow -j + bishopColumn][j] != Empty)
-      {
+      PieceMovement('B',BBishop,bishopRow -j + bishopColumn,j);
+      if ( PieceMovement('B',BBishop,bishopRow -j + bishopColumn,j) == true){
+        possiblemoves = true; 
+      } 
+      if (tile[bishopRow -j + bishopColumn][j] != Empty){
         //immediately terminate the for loop
-    break;  
+        break;  
       }
     }
     else {
       break;
     }      
- }
- if (possiblemoves == true){
+  }
+  if (possiblemoves == true){
     return true;
   }
   else
@@ -2457,124 +2227,108 @@ if  ( PieceMovement('B',BBishop,bishopRow+j - bishopColumn,j) == true){
 }
 
 bool wQueenMoves() {      /* Queen Code is Almagamation of the bishop and rook  */
-       bool possiblemoves = 0; 
-
-      int queenRow = i;
+  bool possiblemoves = 0; 
+  int queenRow = i;
   int queenColumn = a;
   /****************************LEFT TO RIGHT*******************/
 
-//Count from right of the queen to end of board
-  for (int j = queenRow+1; j < 8; j++)
-  {
-   if (tile[j][a] != 13)
-     {
-        if (tile[j][a] > 6){
+  //Count from right of the queen to end of board
+  for (int j = queenRow+1; j < 8; j++){
+    if (tile[j][a] != 13){
+      if (tile[j][a] > 6){
         PieceMovement('W',WQueen,j,a);
-        if  (PieceMovement('W',WQueen,j,a) == true){
-       possiblemoves = true; 
-     } 
-        }
-          break;    
+        if (PieceMovement('W',WQueen,j,a) == true){
+          possiblemoves = true; 
+        } 
+      }
+      break;    
     }
     else
-      PieceMovement('W',WQueen,j,a);
-      if  (PieceMovement('W',WQueen,j,a) == true){
-       possiblemoves = true; 
-     } 
-       }   
-  
-  
+    PieceMovement('W',WQueen,j,a);
+    if (PieceMovement('W',WQueen,j,a) == true){
+      possiblemoves = true; 
+    } 
+  }   
   //Count from left of the queen to end of board
-   for (int j = queenRow - 1; j >= 0; j--)
-   {
-   if (tile[j][a] != 13)
-     {
-        if (tile[j][a] > 6){
+  for (int j = queenRow - 1; j >= 0; j--){
+    if (tile[j][a] != 13){
+      if (tile[j][a] > 6){
         PieceMovement('W',WQueen,j,a);
-        if  (PieceMovement('W',WQueen,j,a) == true){
-       possiblemoves = true; 
-     } 
-        }
-          break;    
+        if (PieceMovement('W',WQueen,j,a) == true){
+          possiblemoves = true; 
+        } 
+      }
+      break;    
     }
     else
-      PieceMovement('W',WQueen,j,a);
-      if  (PieceMovement('W',WQueen,j,a) == true){
-       possiblemoves = true; 
-     } 
-       }     
+    PieceMovement('W',WQueen,j,a);
+    if (PieceMovement('W',WQueen,j,a) == true){
+      possiblemoves = true; 
+    } 
+  }     
   
-/**************************** UP TO DOWN*******************/
+  /**************************** UP TO DOWN*******************/
   //Count from queen collumn to bottom of board
-     for (int j = queenColumn - 1; j >= 0; j--)
-   {
-  if (tile[i][j] != 13)
-     {
-        if (tile[i][j] > 6){
+  for (int j = queenColumn - 1; j >= 0; j--){
+    if (tile[i][j] != 13){
+      if (tile[i][j] > 6){
         PieceMovement('W',WQueen,i,j);
-        if  (PieceMovement('W',WQueen,i,j) == true){
-       possiblemoves = true; 
-     } 
-        }
-          break;    
+        if (PieceMovement('W',WQueen,i,j) == true){
+          possiblemoves = true; 
+        } 
+      }
+      break;    
     }
     else
-      PieceMovement('W',WQueen,i,j);  
-      if  (PieceMovement('W',WQueen,i,j) == true){
-       possiblemoves = true; 
-     }  
+    PieceMovement('W',WQueen,i,j);  
+    if (PieceMovement('W',WQueen,i,j) == true){
+      possiblemoves = true; 
+    }  
   }
   //Count from queen column to top of board
-     for (int j = queenColumn +1; j < 8; j++)
-   {
-   //If theres are piece leading up to the queen row from the right, c
-     if (tile[i][j] != 13)
-     {
-        if (tile[i][j] > 6){
+  for (int j = queenColumn +1; j < 8; j++){
+    //If theres are piece leading up to the queen row from the right, c
+    if (tile[i][j] != 13){
+      if (tile[i][j] > 6){
         PieceMovement('W',WQueen,i,j);
-        if  ( PieceMovement('W',WQueen,i,j) == true){
-       possiblemoves = true; 
-     } 
-        }
-          break;    
+        if ( PieceMovement('W',WQueen,i,j) == true){
+          possiblemoves = true; 
+        } 
+      }
+      break;    
     }
     else
-      PieceMovement('W',WQueen,i,j);
-      if  ( PieceMovement('W',WQueen,i,j) == true){
-       possiblemoves = true; 
-     } 
+    PieceMovement('W',WQueen,i,j);
+    if ( PieceMovement('W',WQueen,i,j) == true){
+      possiblemoves = true; 
+    } 
   }
   
-//Count from right of the queen to end of board
-  for (int j = queenRow+1; j <= 7; j++)
-  {
- //Find out if the piece is white or black (1 to 6 is white, 7 to 12 black)
+  //Count from right of the queen to end of board
+  for (int j = queenRow+1; j <= 7; j++){
+  //Find out if the piece is white or black (1 to 6 is white, 7 to 12 black)
     if (tile[j][queenColumn+j - queenRow] > 6){
-       PieceMovement('W',WQueen,j,queenColumn+j-queenRow);
-       if  (PieceMovement('W',WQueen,j,queenColumn+j-queenRow) == true){
-       possiblemoves = true; 
-     } 
-
-       if (tile[j][queenColumn + j - queenRow] != Empty)
-      {
-    break;  
+      PieceMovement('W',WQueen,j,queenColumn+j-queenRow);
+      if (PieceMovement('W',WQueen,j,queenColumn+j-queenRow) == true){
+        possiblemoves = true; 
+      } 
+      if (tile[j][queenColumn + j - queenRow] != Empty){
+        break;  
       }
     }
     else {
       break;
     } 
   }
-    for (int j = queenRow+1; j <= 7; j++){   
+  for (int j = queenRow+1; j <= 7; j++){   
     //Other Side
     if (tile[j][queenColumn - j + queenRow] > 6){
-  PieceMovement('W',WQueen,j,queenColumn-j+queenRow);
-  if  ( PieceMovement('W',WQueen,j,queenColumn-j+queenRow) == true){
-       possiblemoves = true; 
-     } 
-      
-      if (tile[j][queenColumn - j + queenRow] != Empty)
-      {
-    break;  
+      PieceMovement('W',WQueen,j,queenColumn-j+queenRow);
+      if ( PieceMovement('W',WQueen,j,queenColumn-j+queenRow) == true){
+        possiblemoves = true; 
+      } 
+      if (tile[j][queenColumn - j + queenRow] != Empty){
+        break;  
       }
     }
     else {
@@ -2582,247 +2336,216 @@ bool wQueenMoves() {      /* Queen Code is Almagamation of the bishop and rook  
     }              
   }
   //Count from left of the queen to end of board
-   for (int j = queenRow - 1; j >= 0; j--)
-   {
- //Find out if the piece is white or black (1 to 6 is white, 7 to 12 black)
+  for (int j = queenRow - 1; j >= 0; j--){
+  //Find out if the piece is white or black (1 to 6 is white, 7 to 12 black)
     if (tile[j][queenColumn+j - queenRow] > 6){
-       PieceMovement('W',WQueen,j,queenColumn+j-queenRow);
-       if  (PieceMovement('W',WQueen,j,queenColumn+j-queenRow) == true){
-       possiblemoves = true; 
-     } 
-
-       if (tile[j][queenColumn + j - queenRow] != Empty)
-      {
+      PieceMovement('W',WQueen,j,queenColumn+j-queenRow);
+      if  (PieceMovement('W',WQueen,j,queenColumn+j-queenRow) == true){
+        possiblemoves = true; 
+      } 
+      if (tile[j][queenColumn + j - queenRow] != Empty){
         //immediately terminate the for loop
-    break;  
+        break;  
       }
     }
     else {
       break;
     }  
-   }  
-       for (int j = queenRow - 1; j >= 0; j--)
-  {
+  }  
+  for (int j = queenRow - 1; j >= 0; j--){
     //Other Side
     if (tile[j][queenColumn - j + queenRow] > 6){
-
-  PieceMovement('W',WQueen,j,queenColumn-j+queenRow);
-  if  (PieceMovement('W',WQueen,j,queenColumn-j+queenRow) == true){
-       possiblemoves = true; 
-     } 
-      if (tile[j][queenColumn - j + queenRow] != Empty)
-      {
+      PieceMovement('W',WQueen,j,queenColumn-j+queenRow);
+      if (PieceMovement('W',WQueen,j,queenColumn-j+queenRow) == true){
+        possiblemoves = true; 
+      } 
+      if (tile[j][queenColumn - j + queenRow] != Empty){
         //immediately terminate the for loop
-    break;  
+        break;  
       }
     }
     else {
       break;
     }      
-   }
-/**************************** UP TO DOWN*******************/
+  }
+  /**************************** UP TO DOWN*******************/
   //Count from queen collumn to bottom of board
-     for (int j = queenColumn - 1; j >= 0; j--)
-   {
-       //Find out if the piece is white or black (1 to 6 is white, 7 to 12 black)
-    if (tile[queenRow+j - queenColumn][j] > 6){
-       PieceMovement('W',WQueen,queenRow+j - queenColumn,j);
-if  ( PieceMovement('W',WQueen,queenRow+j - queenColumn,j) == true){
-       possiblemoves = true; 
-     } 
-       if (tile[queenRow+j - queenColumn][j] != Empty)
-      {
-        //immediately terminate the for loop
-    break;  
+    for (int j = queenColumn - 1; j >= 0; j--){
+      //Find out if the piece is white or black (1 to 6 is white, 7 to 12 black)
+      if (tile[queenRow+j - queenColumn][j] > 6){
+        PieceMovement('W',WQueen,queenRow+j - queenColumn,j);
+        if (PieceMovement('W',WQueen,queenRow+j - queenColumn,j) == true){
+          possiblemoves = true; 
+        } 
+        if (tile[queenRow+j - queenColumn][j] != Empty){
+          //immediately terminate the for loop
+          break;  
+        }
       }
-    }
     else {
       break;
     }   
-   }
-        for (int j = queenColumn - 1; j >= 0; j--)
-  {
+  }
+  for (int j = queenColumn - 1; j >= 0; j--){
     //Other Side
     if (tile[queenRow -j + queenColumn][j] > 6){
-
-  PieceMovement('W',WQueen,queenRow -j + queenColumn,j);
-  if  ( PieceMovement('W',WQueen,queenRow -j + queenColumn,j) == true){
-       possiblemoves = true; 
-     } 
-      if (tile[queenRow -j + queenColumn][j] != Empty)
-      {
+      PieceMovement('W',WQueen,queenRow -j + queenColumn,j);
+      if ( PieceMovement('W',WQueen,queenRow -j + queenColumn,j) == true){
+        possiblemoves = true; 
+      } 
+      if (tile[queenRow -j + queenColumn][j] != Empty){
         //immediately terminate the for loop
-    break;  
+        break;  
       }
     }
     else {
       break;
     }      
-   }
+  }
   //Count from queen column to top of board
-     for (int j = queenColumn +1; j <= 7; j++)
-   {
-            //Find out if the piece is white or black (1 to 6 is white, 7 to 12 black)
+  for (int j = queenColumn +1; j <= 7; j++){
+    //Find out if the piece is white or black (1 to 6 is white, 7 to 12 black)
     if (tile[queenRow+j - queenColumn][j] > 6){
-       PieceMovement('W',WQueen,queenRow+j - queenColumn,j);
-if  ( PieceMovement('W',WQueen,queenRow+j - queenColumn,j) == true){
-       possiblemoves = true; 
-     } 
-       if (tile[queenRow+j - queenColumn][j] != Empty)
+      PieceMovement('W',WQueen,queenRow+j - queenColumn,j);
+      if (PieceMovement('W',WQueen,queenRow+j - queenColumn,j) == true){
+        possiblemoves = true; 
+      } 
+      if (tile[queenRow+j - queenColumn][j] != Empty)
       {
         //immediately terminate the for loop
-    break;  
+        break;  
       }
     }
     else {
       break;
     }   
-   }
-        for (int j = queenColumn +1; j <= 7; j++){ 
+  }
+  for (int j = queenColumn +1; j <= 7; j++){ 
     //Other Side
     if (tile[queenRow -j + queenColumn][j] > 6){
-
-  PieceMovement('W',WQueen,queenRow -j + queenColumn,j);
-  if  (PieceMovement('W',WQueen,queenRow -j + queenColumn,j) == true){
-       possiblemoves = true; 
-     } 
-      if (tile[queenRow -j + queenColumn][j] != Empty)
-      {
+      PieceMovement('W',WQueen,queenRow -j + queenColumn,j);
+      if (PieceMovement('W',WQueen,queenRow -j + queenColumn,j) == true){
+        possiblemoves = true; 
+      } 
+      if (tile[queenRow -j + queenColumn][j] != Empty){
         //immediately terminate the for loop
-    break;  
+        break;  
       }
     }
     else {
       break;
     }      
- }
- if (possiblemoves == true){
+  }
+  if (possiblemoves == true){
     return true;
   }
   else
   return false; 
-
 }
 
 bool bQueenMoves() {
-        bool possiblemoves = 0; 
- 
+  bool possiblemoves = 0; 
   int queenRow = i;
   int queenColumn = a;
   /****************************LEFT TO RIGHT*******************/
 
-//Count from right of the queen to end of board
-  for (int j = queenRow+1; j < 8; j++)
-  {
-   if (tile[j][a] != 13)
-     {
-        if (tile[j][a] <= 6){
+  //Count from right of the queen to end of board
+  for (int j = queenRow+1; j < 8; j++){
+    if (tile[j][a] != 13){
+      if (tile[j][a] <= 6){
         PieceMovement('B',BQueen,j,a);
-        if  (PieceMovement('B',BQueen,j,a) == true){
-       possiblemoves = true; 
-     } 
-        }
-          break;    
+        if (PieceMovement('B',BQueen,j,a) == true){
+        possiblemoves = true; 
+        } 
+      }
+      break;    
     }
     else
-      PieceMovement('B',BQueen,j,a);
-      if  ( PieceMovement('B',BQueen,j,a) == true){
-       possiblemoves = true; 
-     } 
-       }   
-  
-  
+    PieceMovement('B',BQueen,j,a);
+    if (PieceMovement('B',BQueen,j,a) == true){
+      possiblemoves = true; 
+    } 
+  }   
   //Count from left of the queen to end of board
-   for (int j = queenRow - 1; j >= 0; j--)
-   {
-   if (tile[j][a] != 13)
-     {
-        if (tile[j][a] <= 6){
+  for (int j = queenRow - 1; j >= 0; j--){
+    if (tile[j][a] != 13){
+      if (tile[j][a] <= 6){
         PieceMovement('B',BQueen,j,a);
         if  (PieceMovement('B',BQueen,j,a) == true){
-       possiblemoves = true; 
-     } 
-        }
-          break;    
+          possiblemoves = true; 
+        } 
+      }
+      break;    
     }
     else
-      PieceMovement('B',BQueen,j,a);
-      if  (PieceMovement('B',BQueen,j,a) == true){
-       possiblemoves = true; 
-     } 
-       }     
+    PieceMovement('B',BQueen,j,a);
+    if (PieceMovement('B',BQueen,j,a) == true){
+    possiblemoves = true; 
+    } 
+  }     
   
-/**************************** UP TO DOWN*******************/
+  /**************************** UP TO DOWN*******************/
   //Count from queen collumn to bottom of board
-     for (int j = queenColumn - 1; j >= 0; j--)
-   {
-  if (tile[i][j] != 13)
-     {
-        if (tile[i][j] <= 6){
+  for (int j = queenColumn - 1; j >= 0; j--){
+    if (tile[i][j] != 13){
+      if (tile[i][j] <= 6){
         PieceMovement('B',BQueen,i,j);
-        if  ( PieceMovement('B',BQueen,i,j) == true){
-       possiblemoves = true; 
-     } 
-        }
-          break;    
+        if (PieceMovement('B',BQueen,i,j) == true){
+          possiblemoves = true; 
+        } 
+      }
+      break;    
     }
     else
-      PieceMovement('B',BQueen,i,j);   
-      if  ( PieceMovement('B',BQueen,i,j) == true){
-       possiblemoves = true; 
-     } 
+    PieceMovement('B',BQueen,i,j);   
+    if (PieceMovement('B',BQueen,i,j) == true){
+      possiblemoves = true; 
+    } 
   }
   //Count from queen column to top of board
-     for (int j = queenColumn +1; j < 8; j++)
-   {
-   //If theres are piece leading up to the queen row from the right, c
-     if (tile[i][j] != 13)
-     {
-        if (tile[i][j] <= 6){
+  for (int j = queenColumn +1; j < 8; j++){
+    //If theres are piece leading up to the queen row from the right, c
+    if (tile[i][j] != 13){
+      if (tile[i][j] <= 6){
         PieceMovement('B',BQueen,i,j);
-        if  ( (PieceMovement('B',BQueen,i,j)) == true){
-       possiblemoves = true; 
-     } 
-        }
-          break;    
+        if ((PieceMovement('B',BQueen,i,j)) == true){
+          possiblemoves = true; 
+        } 
+      }
+      break;    
     }
     else
-      PieceMovement('B',BQueen,i,j);
-      if  ( PieceMovement('B',BQueen,i,j) == true){
-       possiblemoves = true; 
-     } 
+    PieceMovement('B',BQueen,i,j);
+    if ( PieceMovement('B',BQueen,i,j) == true){
+      possiblemoves = true; 
+    } 
   }
   
-//Count from right of the queen to end of board
-  for (int j = queenRow+1; j <= 7; j++)
-  {
- //Find out if the piece is white or black (1 to 6 is white, 7 to 12 black)
+  //Count from right of the queen to end of board
+  for (int j = queenRow+1; j <= 7; j++){
+    //Find out if the piece is white or black (1 to 6 is white, 7 to 12 black)
     if ((tile[j][queenColumn +j - queenRow] <= 6) || (tile[j][queenColumn +j - queenRow] == Empty)){
-       PieceMovement('B',BQueen,j,queenColumn+j-queenRow);
-       if  (PieceMovement('B',BQueen,j,queenColumn+j-queenRow) == true){
-       possiblemoves = true; 
-     } 
-
-       if (tile[j][queenColumn + j - queenRow] != Empty)
-      {
-    break;  
+      PieceMovement('B',BQueen,j,queenColumn+j-queenRow);
+      if (PieceMovement('B',BQueen,j,queenColumn+j-queenRow) == true){
+        possiblemoves = true; 
+      } 
+      if (tile[j][queenColumn + j - queenRow] != Empty){
+        break;  
       }
     }
     else {
       break;
     }   
   } 
-      for (int j = queenRow+1; j <= 7; j++){
+  for (int j = queenRow+1; j <= 7; j++){
     //Other Side
     if ((tile[j][queenColumn - j + queenRow] <= 6) || (tile[j][queenColumn - j + queenRow] == Empty)){
-  PieceMovement('B',BQueen,j,queenColumn-j+queenRow);
-  if  ( PieceMovement('B',BQueen,j,queenColumn-j+queenRow) == true){
-       possiblemoves = true; 
-     } 
-      
-      if (tile[j][queenColumn - j + queenRow] != Empty)
-      {
-    break;  
+      PieceMovement('B',BQueen,j,queenColumn-j+queenRow);
+      if (PieceMovement('B',BQueen,j,queenColumn-j+queenRow) == true){
+        possiblemoves = true; 
+      } 
+      if (tile[j][queenColumn - j + queenRow] != Empty){
+        break;  
       }
     }
     else {
@@ -2830,121 +2553,106 @@ bool bQueenMoves() {
     }              
   }
   //Count from left of the queen to end of board
-   for (int j = queenRow - 1; j >= 0; j--)
-   {
- //Find out if the piece is white or black (1 to 6 is white, 7 to 12 black)
+  for (int j = queenRow - 1; j >= 0; j--){
+    //Find out if the piece is white or black (1 to 6 is white, 7 to 12 black)
     if ((tile[j][queenColumn +j - queenRow] <= 6) || (tile[j][queenColumn+j - queenRow] == Empty)){
-       PieceMovement('B',BQueen,j,queenColumn+j-queenRow);
-if  (PieceMovement('B',BQueen,j,queenColumn+j-queenRow) == true){
-       possiblemoves = true; 
-     } 
-       if (tile[j][queenColumn + j - queenRow] != Empty)
-      {
+      PieceMovement('B',BQueen,j,queenColumn+j-queenRow);
+      if (PieceMovement('B',BQueen,j,queenColumn+j-queenRow) == true){
+        possiblemoves = true; 
+      } 
+      if (tile[j][queenColumn + j - queenRow] != Empty){
         //immediately terminate the for loop
-    break;  
+        break;  
       }
     }
     else {
       break;
     }    
-   }
-      for (int j = queenRow - 1; j >= 0; j--)
-  {
+  }
+  for (int j = queenRow - 1; j >= 0; j--){
     //Other Side
     if ((tile[j][queenColumn -j + queenRow] <= 6) || (tile[j][queenColumn -j + queenRow] == Empty)){
-
-  PieceMovement('B',BQueen,j,queenColumn-j+queenRow);
-  if  (PieceMovement('B',BQueen,j,queenColumn-j+queenRow) == true){
-       possiblemoves = true; 
-     } 
-      if (tile[j][queenColumn - j + queenRow] != Empty)
-      {
+      PieceMovement('B',BQueen,j,queenColumn-j+queenRow);
+      if (PieceMovement('B',BQueen,j,queenColumn-j+queenRow) == true){
+        possiblemoves = true; 
+      } 
+      if (tile[j][queenColumn - j + queenRow] != Empty){
         //immediately terminate the for loop
-    break;  
+        break;  
       }
     }
     else {
       break;
     }      
-   }
-/**************************** UP TO DOWN*******************/
+  }
+  /**************************** UP TO DOWN*******************/
   //Count from queen collumn to bottom of board
-     for (int j = queenColumn - 1; j >= 0; j--)
-   {
-       //Find out if the piece is white or black (1 to 6 is white, 7 to 12 black)
+  for (int j = queenColumn - 1; j >= 0; j--){
+    //Find out if the piece is white or black (1 to 6 is white, 7 to 12 black)
     if ((tile[queenRow+j - queenColumn][j] <= 6) || (tile[queenRow+j - queenColumn][j] == Empty)){
-       PieceMovement('B',BQueen,queenRow+j - queenColumn,j);
-if  (PieceMovement('B',BQueen,queenRow+j - queenColumn,j) == true){
-       possiblemoves = true; 
-     } 
-       if (tile[queenRow+j - queenColumn][j] != Empty)
-      {
+      PieceMovement('B',BQueen,queenRow+j - queenColumn,j);
+      if (PieceMovement('B',BQueen,queenRow+j - queenColumn,j) == true){
+        possiblemoves = true; 
+      } 
+      if (tile[queenRow+j - queenColumn][j] != Empty){
         //immediately terminate the for loop
-    break;  
+        break;  
       }
     }
     else {
       break;
     } 
-   }  
-         for (int j = queenColumn - 1; j >= 0; j--)
-  { 
+  }  
+  for (int j = queenColumn - 1; j >= 0; j--){ 
     //Other Side
     if ((tile[queenRow - j + queenColumn][j] <= 6) || (tile[queenRow- j + queenColumn][j] == Empty)){
-
-  PieceMovement('B',BQueen,queenRow -j + queenColumn,j);
-  if  (PieceMovement('B',BQueen,queenRow -j + queenColumn,j) == true){
-       possiblemoves = true; 
-     } 
-      if (tile[queenRow -j + queenColumn][j] != Empty)
-      {
+      PieceMovement('B',BQueen,queenRow -j + queenColumn,j);
+      if (PieceMovement('B',BQueen,queenRow -j + queenColumn,j) == true){
+        possiblemoves = true; 
+      } 
+      if (tile[queenRow -j + queenColumn][j] != Empty){
         //immediately terminate the for loop
-    break;  
+        break;  
       }
     }
     else {
       break;
     }      
-   }
+  }
   //Count from queen column to top of board
-     for (int j = queenColumn +1; j <= 7; j++)
-   {
-            //Find out if the piece is white or black (1 to 6 is white, 7 to 12 black)
+  for (int j = queenColumn +1; j <= 7; j++){
+    //Find out if the piece is white or black (1 to 6 is white, 7 to 12 black)
     if ((tile[queenRow+j - queenColumn][j] <= 6) || (tile[queenRow+j - queenColumn][j] == Empty)) {
-       PieceMovement('B',BQueen,queenRow+j - queenColumn,j);
-if  (PieceMovement('B',BQueen,queenRow+j - queenColumn,j) == true){
-       possiblemoves = true; 
-     } 
-       if (tile[queenRow+j - queenColumn][j] != Empty)
-      {
+      PieceMovement('B',BQueen,queenRow+j - queenColumn,j);
+      if (PieceMovement('B',BQueen,queenRow+j - queenColumn,j) == true){
+        possiblemoves = true; 
+      } 
+      if (tile[queenRow+j - queenColumn][j] != Empty){
         //immediately terminate the for loop
-    break;  
+        break;  
       }
     }
     else {
       break;
     }    
-   }
-         for (int j = queenColumn +1; j <= 7; j++)
-  { 
+  }
+  for (int j = queenColumn +1; j <= 7; j++){ 
     //Other Side
     if ((tile[queenRow - j + queenColumn][j] <= 6) || (tile[queenRow -j + queenColumn][j] == Empty)){
-
-  PieceMovement('B',BQueen,queenRow -j + queenColumn,j);
-  if  (  PieceMovement('B',BQueen,queenRow -j + queenColumn,j) == true){
-       possiblemoves = true; 
-     } 
-      if (tile[queenRow -j + queenColumn][j] != Empty)
-      {
+      PieceMovement('B',BQueen,queenRow -j + queenColumn,j);
+      if (PieceMovement('B',BQueen,queenRow -j + queenColumn,j) == true){
+        possiblemoves = true; 
+      } 
+      if (tile[queenRow -j + queenColumn][j] != Empty){
         //immediately terminate the for loop
-    break;  
+        break;  
       }
     }
     else {
       break;
     }      
- }
- if (possiblemoves == true){
+  }
+  if (possiblemoves == true){
     return true;
   }
   else
@@ -2952,94 +2660,83 @@ if  (PieceMovement('B',BQueen,queenRow+j - queenColumn,j) == true){
 }
 
 bool wKingMoves() {
-        bool possiblemoves = 0; 
-
+  bool possiblemoves = 0; 
     //If king not at the start, change to 0 
     if ((a != 4) || (i != 7)){
-
-    WKingstart = 0;
-  }
-  
+      WKingstart = 0;
+    }
   castling();
-  
   if (Wkingsidecastle == 1){
     PieceMovement('W',WKing,i,a+2);
-    if  (PieceMovement('W',WKing,i,a+2) == true){
-       possiblemoves = true; 
-     } 
+    if (PieceMovement('W',WKing,i,a+2) == true){
+      possiblemoves = true; 
+    } 
   }
-   if (Wqueensidecastle == 1){
+  if (Wqueensidecastle == 1){
     PieceMovement('W',WKing,i,a-2);
-    if  (PieceMovement('W',WKing,i,a-2) == true){
-       possiblemoves = true; 
-     } 
+    if (PieceMovement('W',WKing,i,a-2) == true){
+      possiblemoves = true; 
+    } 
   }
   //check can move up
   if (tile[i][a+1] > 6) {
-   PieceMovement('W',WKing,i,a+1);
-   if  ( PieceMovement('W',WKing,i,a+1) == true){
-       possiblemoves = true; 
-     } 
+    PieceMovement('W',WKing,i,a+1);
+    if (PieceMovement('W',WKing,i,a+1) == true){
+      possiblemoves = true; 
+    } 
   }
-  
-//check can move down
+  //check can move down
   if (tile[i][a-1] > 6)  {
-   PieceMovement('W',WKing,i,a-1);
-   if  (PieceMovement('W',WKing,i,a-1) == true){
-       possiblemoves = true; 
-     } 
+    PieceMovement('W',WKing,i,a-1);
+    if (PieceMovement('W',WKing,i,a-1) == true){
+      possiblemoves = true; 
+    } 
   }
-  
-//check can move left
+  //check can move left
   if (tile[i-1][a] > 6) {
-  PieceMovement('W',WKing,i-1,a);
-  if  ( PieceMovement('W',WKing,i-1,a) == true){
-    Serial.println("can move up");
-       possiblemoves = true; 
-     } 
+    PieceMovement('W',WKing,i-1,a);
+    if (PieceMovement('W',WKing,i-1,a) == true){
+      Serial.println("can move up");
+      possiblemoves = true; 
+    } 
   }  
-  
-//check can move Right
+  //check can move Right
   if (tile[i+1][a] > 6) {
-   PieceMovement('W',WKing,i+1,a);
-   if  ( PieceMovement('W',WKing,i+1,a) == true){
-       possiblemoves = true; 
-     } 
+    PieceMovement('W',WKing,i+1,a);
+    if (PieceMovement('W',WKing,i+1,a) == true){
+      possiblemoves = true; 
+    } 
   }    
-
-//check can move Top right
+  //check can move Top right
   if (tile[i+1][a+1] > 6) { 
-   PieceMovement('W',WKing,i+1,a+1);
-   if  ( PieceMovement('W',WKing,i+1,a+1) == true){    
-       possiblemoves = true; 
-     } 
+    PieceMovement('W',WKing,i+1,a+1);
+    if (PieceMovement('W',WKing,i+1,a+1) == true){    
+      possiblemoves = true; 
+    } 
   }
-
-//check can move Bottom right
+  //check can move Bottom right
   if (tile[i-1][a+1] > 6)  {
     PieceMovement('W',WKing,i-1,a+1);
-    if  (PieceMovement('W',WKing,i-1,a+1) == true){
-    Serial.println("can move up left");      
-       possiblemoves = true; 
-     } 
+    if (PieceMovement('W',WKing,i-1,a+1) == true){
+      Serial.println("can move up left");      
+      possiblemoves = true; 
+    } 
   }
-
-//check can move Bottom Left
+  //check can move Bottom Left
   if (tile[i-1][a-1] > 6) {
     PieceMovement('W',WKing,i-1,a-1);
     Serial.println("can move up");    
-    if  (PieceMovement('W',WKing,i-1,a-1) == true){
-    Serial.println("can move up right");      
-       possiblemoves = true; 
-     } 
+    if (PieceMovement('W',WKing,i-1,a-1) == true){
+      Serial.println("can move up right");      
+      possiblemoves = true; 
+    } 
   }  
-
-//check can move Top Left
+  //check can move Top Left
   if (tile[i+1][a-1] > 6) {
-  PieceMovement('W',WKing,i+1,a-1);
-  if  (PieceMovement('W',WKing,i+1,a-1) == true){
-       possiblemoves = true; 
-     } 
+    PieceMovement('W',WKing,i+1,a-1);
+    if (PieceMovement('W',WKing,i+1,a-1) == true){
+      possiblemoves = true; 
+    } 
   }
   if (possiblemoves == true){
     return true;
@@ -3049,111 +2746,97 @@ bool wKingMoves() {
 }
 
 bool bKingMoves() {
-        bool possiblemoves = 0; 
+  bool possiblemoves = 0; 
   //If king not at the start, change to 0 
-  if ((a != 4) || (i != 0)){
-    
+  if ((a != 4) || (i != 0)){  
     BKingstart = 0;
   }
-    //Check If castling can occur 
+  //Check If castling can occur 
   castling();
-  
   if (Bkingsidecastle == 1){
-   PieceMovement('B',BKing,i,a+2);
-   if  (PieceMovement('B',BKing,i,a+2) == true){
-       possiblemoves = true; 
-     } 
+    PieceMovement('B',BKing,i,a+2);
+    if (PieceMovement('B',BKing,i,a+2) == true){
+      possiblemoves = true; 
+    } 
   }
-   if (Bqueensidecastle == 1){
-      PieceMovement('B',BKing,i,a-2);
-      if  (PieceMovement('B',BKing,i,a-2) == true){
-       possiblemoves = true; 
-     } 
+  if (Bqueensidecastle == 1){
+    PieceMovement('B',BKing,i,a-2);
+    if (PieceMovement('B',BKing,i,a-2) == true){
+      possiblemoves = true; 
+    } 
   }
-  
-//check can move up
+  //check can move up
   if ((tile[i][a+1] < 7)  || (tile[i][a+1] == 13)) {
-      PieceMovement('B',BKing,i,a+1);
-      if  ( PieceMovement('B',BKing,i,a+1) == true){
-       possiblemoves = true; 
-     } 
+    PieceMovement('B',BKing,i,a+1);
+    if (PieceMovement('B',BKing,i,a+1) == true){
+      possiblemoves = true; 
+    } 
   }
-  
-//check can move down
+  //check can move down
   if ((tile[i][a-1] < 7) || (tile[i][a-1] == 13)) {
-     PieceMovement('B',BKing,i,a-1);
-     if  (PieceMovement('B',BKing,i,a-1) == true){
-       possiblemoves = true; 
-     } 
+    PieceMovement('B',BKing,i,a-1);
+    if (PieceMovement('B',BKing,i,a-1) == true){
+      possiblemoves = true; 
+    } 
   }
-  
-//check can move left
+  //check can move left
   if ((tile[i-1][a] < 7) || (tile[i-1][a] == 13)) {
-      PieceMovement('B',BKing,i-1,a);
-      if  (PieceMovement('B',BKing,i-1,a) == true){
-       possiblemoves = true; 
-     } 
+    PieceMovement('B',BKing,i-1,a);
+    if (PieceMovement('B',BKing,i-1,a) == true){
+      possiblemoves = true; 
+    } 
   }  
-  
 //check can move Right
   if ((tile[i+1][a] < 7)  || (tile[i+1][a] == 13)) {
-      PieceMovement('B',BKing,i+1,a);
-      if  ( PieceMovement('B',BKing,i+1,a) == true){
-       possiblemoves = true; 
-     } 
+    PieceMovement('B',BKing,i+1,a);
+    if (PieceMovement('B',BKing,i+1,a) == true){
+      possiblemoves = true; 
+    } 
   }    
-
 //check can move Top right
   if ((tile[i+1][a+1] < 7) || (tile[i+1][a+1] == 13)) {
-     PieceMovement('B',BKing,i+1,a+1);
-     if  (PieceMovement('B',BKing,i+1,a+1) == true){
-       possiblemoves = true; 
-     } 
+    PieceMovement('B',BKing,i+1,a+1);
+    if (PieceMovement('B',BKing,i+1,a+1) == true){
+      possiblemoves = true; 
+    } 
   }
-
 //check can move Bottom right
   if ((tile[i-1][a+1] < 7)  || (tile[i-1][a+1] == 13)) {
-      PieceMovement('B',BKing,i-1,a+1);
-      if  (PieceMovement('B',BKing,i-1,a+1) == true){
-       possiblemoves = true; 
-     } 
+    PieceMovement('B',BKing,i-1,a+1);
+      if (PieceMovement('B',BKing,i-1,a+1) == true){
+      possiblemoves = true; 
+    } 
   }
-
 //check can move Bottom Left
   if ((tile[i-1][a-1] < 7)|| (tile[i-1][a-1] == 13)) {
-     PieceMovement('B',BKing,i-1,a-1);
-     if  ( PieceMovement('B',BKing,i-1,a-1) == true){
-       possiblemoves = true; 
-     } 
+    PieceMovement('B',BKing,i-1,a-1);
+    if (PieceMovement('B',BKing,i-1,a-1) == true){
+      possiblemoves = true; 
+    } 
   }  
 
-//check can move Top Left
+  //check can move Top Left
   if ((tile[i+1][a-1] < 7) || (tile[i+1][a-1] == 13)) {
-       PieceMovement('B',BKing,i+1,a-1);
-       if  ( PieceMovement('B',BKing,i+1,a-1) == true){
-       possiblemoves = true; 
-     } 
+    PieceMovement('B',BKing,i+1,a-1);
+    if (PieceMovement('B',BKing,i+1,a-1) == true){
+      possiblemoves = true; 
+    } 
   } 
-   if (possiblemoves == true){
+  if (possiblemoves == true){
     return true;
   }
   else
   return false; 
 }  
 
-void checkColourButton() {
-
+void checkColourButton(){
   lastColour1State = colour1State;
   colour1State = digitalRead(colourPin1);
-
-  if (colour1State == HIGH && lastColour1State == LOW) {
-    
+  if (colour1State == HIGH && lastColour1State == LOW){
     colour1++;
-    
     if (colour1 == 8) {
       colour1 = 1;
     }
-
     for (ledNumber = 0; ledNumber < 64; ledNumber++) {
       colourswap1();
       pixels.show();
@@ -3161,15 +2844,10 @@ void checkColourButton() {
     delay(5);
     blankLights();     
   }
-
-
   lastColour2State = colour2State;
   colour2State = digitalRead(colourPin2);
-
   if (colour2State == HIGH && lastColour2State == LOW) {
-    
     colour2++;
-      
     if (colour2 == 8) {
       colour2 = 1;
     }
@@ -3177,18 +2855,13 @@ void checkColourButton() {
       colourswap2();
       pixels.show(); 
     }
-
     delay(5);
     blankLights();       
   }
-
   lastColour3State = colour3State;
   colour3State = digitalRead(colourPin3);
-
   if (colour3State == HIGH && lastColour3State == LOW) {
-    
     colour3++;
-      
     if (colour3 == 8) {
       colour3 = 1;
     }
@@ -3202,7 +2875,6 @@ void checkColourButton() {
 }
       
 void colourswap1() { // colour of piece picked up
-  
   switch(colour1) {
     case 1:
       //white
@@ -3236,7 +2908,6 @@ void colourswap1() { // colour of piece picked up
 }
 
 void colourswap2() { // colour of piece moves
-
   switch(colour2) {
     case 1:
       //white
@@ -3270,7 +2941,6 @@ void colourswap2() { // colour of piece moves
 }
 
 void colourswap3() { // colour of piece captures
-  
   switch(colour3) {
     case 1:
       //white
@@ -3304,297 +2974,260 @@ void colourswap3() { // colour of piece captures
 }
 
 void enpassant(){
-
-for ( int s = 0; s < 8; s++){
-//scan through rows 3 and 4 to see if there are pawns there and if start is still 1 (meaning they just moved twice)
-  //Find if white pawns move twice
-  if ((tile[4][s] == WPawn) && (Wpawnstart[s] == 1)){
-  Wenpassant[s] = 1;
-    
-  } else
-     {      Wenpassant[s] = 0;
-}
-  
-//Find if black pawns move twice
+  for ( int s = 0; s < 8; s++){
+    //scan through rows 3 and 4 to see if there are pawns there and if start is still 1 (meaning they just moved twice)
+    //Find if white pawns move twice
+    if ((tile[4][s] == WPawn) && (Wpawnstart[s] == 1)){
+      Wenpassant[s] = 1;    
+    } 
+    else{  
+      Wenpassant[s] = 0;
+    }
+    //Find if black pawns move twice
     if ((tile[3][s] == BPawn) && (Bpawnstart[s] == 1)){
       Benpassant[s] = 1;
-
-    } else
-    {      Benpassant[s] = 0;
-}
+    } 
+    else{ 
+      Benpassant[s] = 0;
+    }
   }
 }
 
 void castling(){
-
-if (!(tile[0][0] == BRook)){
-Bcastlestart[0] = 0;
-}
-if (!(tile[0][7] == BRook)){
-Bcastlestart[1] = 0;
-}
- if (!(tile[7][7] == WRook)){
-Wcastlestart[1] = 0;
-}
-if (!(tile[7][0] == WRook)){
-Wcastlestart[0] = 0;
-}
-  
- 
-  //If White King Hasnt Moved
-if (BKingstart == 1){
-
-      //Look to the right of the king just before the rook 
-    for ( int s = 5; s < 7; s++){
-
-      
-       if ((tile[0][s] == Empty) && (Bcastlestart[1] == 1)){
-      Bkingsidecastle = 1;
-    }
-      //If clear, and rookstart is there, then castling can occur 
-     else {
-       
-             Bkingsidecastle = 0;
-    break;
-     }
-   
-    }
-      //Look to the left of the king just before rook             
-    for ( int s = 3; s > 0; s--){
-
-      
-      if ((tile[0][s] == Empty) && (Bcastlestart[0] == 1)){
-      Bqueensidecastle = 1;
-    }
-      //If clear, and rookstart is there, then castling can occur 
-    else
-      Bqueensidecastle = 0;
-        break;
-     } 
-      
-    }
-  else {
-  
-   Bkingsidecastle = 0;
- Bqueensidecastle = 0;
+  if (!(tile[0][0] == BRook)){
+    Bcastlestart[0] = 0;
   }
-  
-   //If Black King Hasnt Moved
-if (WKingstart == 1){
-
-      //Look to the right of the king just before the rook 
+  if (!(tile[0][7] == BRook)){
+    Bcastlestart[1] = 0;
+  }
+  if (!(tile[7][7] == WRook)){
+    Wcastlestart[1] = 0;
+  }
+  if (!(tile[7][0] == WRook)){
+    Wcastlestart[0] = 0;
+  }
+  //If White King Hasnt Moved
+  if (BKingstart == 1){
+    //Look to the right of the king just before the rook 
     for ( int s = 5; s < 7; s++){
-
+      if ((tile[0][s] == Empty) && (Bcastlestart[1] == 1)){
+        Bkingsidecastle = 1;
+      }
       //If clear, and rookstart is there, then castling can occur 
-     if ((tile[7][s] == Empty) && (Wcastlestart[1] == 1)){
-      Wkingsidecastle = 1;
+      else { 
+        Bkingsidecastle = 0;
         break;
-     }
+      }
+    }
+    //Look to the left of the king just before rook             
+    for ( int s = 3; s > 0; s--){  
+      if ((tile[0][s] == Empty) && (Bcastlestart[0] == 1)){
+        Bqueensidecastle = 1;
+      }
+      //If clear, and rookstart is there, then castling can occur 
+      else
+      Bqueensidecastle = 0;
+      break;
+    } 
+  }
+  else {
+    Bkingsidecastle = 0;
+    Bqueensidecastle = 0;
+  }
+   //If Black King Hasnt Moved
+  if (WKingstart == 1){
+    //Look to the right of the king just before the rook 
+    for ( int s = 5; s < 7; s++){
+      //If clear, and rookstart is there, then castling can occur 
+      if ((tile[7][s] == Empty) && (Wcastlestart[1] == 1)){
+        Wkingsidecastle = 1;
+        break;
+      }
       else {
-            Wkingsidecastle = 0;
+        Wkingsidecastle = 0;
         break;
       }
     }
       //Look to the left of the king just before rook 
-    for ( int s = 3; s > 0; s--){
-
+    for (int s = 3; s > 0; s--){
       //If clear, and rookstart is there, then castling can occur 
-     if ((tile[7][s] == Empty) && (Wcastlestart[0] == 1)){
-         Wqueensidecastle = 1;
-     }
+      if ((tile[7][s] == Empty) && (Wcastlestart[0] == 1)){
+        Wqueensidecastle = 1;
+      }
       else {
-     Wqueensidecastle = 0;
-      break;   
+        Wqueensidecastle = 0;
+        break;   
       }
     }
-  } else {
-
- Wkingsidecastle = 0;
- Wqueensidecastle = 0;
-
-}
-  
+  } 
+  else {
+    Wkingsidecastle = 0;
+    Wqueensidecastle = 0;
+  }
 }
 
 bool Checkmate(){
-
-bool mate = 0;
-
-//If White is In check 
-if (CheckFunction('W') == true){
-
-
-//Run through tiles 
-  for (int column = 0; column < 8; column++){
-
-    for (int row = 0; row < 8; row++){
-      
-  //WPawn Moves
-      if (tile[row][column] == WPawn){
-        i = row;
-        a = column;
-        //If theres possible moves, return false
-        if (wPawnMoves() == true){
-          i = 0;
-          a = 0;
-          mate = 1;          
-          return false;
+  bool mate = 0;
+  //If White is In check 
+  if (CheckFunction('W') == true){
+    //Run through tiles 
+    for (int column = 0; column < 8; column++){
+      for (int row = 0; row < 8; row++){
+        //WPawn Moves
+        if (tile[row][column] == WPawn){
+          i = row;
+          a = column;
+          //If theres possible moves, return false
+          if (wPawnMoves() == true){
+            i = 0;
+            a = 0;
+            mate = 1;          
+            return false;
+          }
         }
-      }
-      
-  //WRook Moves
-      if (tile[row][column] == WRook){
-        i = row;
-        a = column;
-        //If theres possible moves, return false
-        if (wRookMoves() == true){
-          i = 0;
-          a = 0;
-          mate = 1;          
-          return false;
+        //WRook Moves
+        if (tile[row][column] == WRook){
+          i = row;
+          a = column;
+          //If theres possible moves, return false
+          if (wRookMoves() == true){
+            i = 0;
+            a = 0;
+            mate = 1;          
+            return false;
+          }
         }
-      }
-      
-
-  //WKnight Moves
-      if (tile[row][column] == WKnight){
-        i = row;
-        a = column;        
-         if (wKnightMoves() == true){
-          i = 0;
-          a = 0;
-          mate = 1;                     
-          return false;
+        //WKnight Moves
+        if (tile[row][column] == WKnight){
+          i = row;
+          a = column;        
+          if (wKnightMoves() == true){
+            i = 0;
+            a = 0;
+            mate = 1;                     
+            return false;
+          }
         }
-      }
-
-  //WBishop Moves
-      if (tile[row][column] == WBishop){
-        i = row;
-        a = column;        
-         if (wBishopMoves() == true){
-          i = 0;
-          a = 0;
-          mate = 1;                     
-          return false;
+        //WBishop Moves
+        if (tile[row][column] == WBishop){
+          i = row;
+          a = column;        
+          if (wBishopMoves() == true){
+            i = 0;
+            a = 0;
+            mate = 1;                     
+            return false;
+          }
         }
-      }
-  //WQueen Moves
-      if (tile[row][column] == WQueen){
-        i = row;
-        a = column;        
-         if (wQueenMoves() == true){
-          i = 0;
-          a = 0;
-          mate = 1;                     
-          return false;
+        //WQueen Moves
+        if (tile[row][column] == WQueen){
+          i = row;
+          a = column;        
+          if (wQueenMoves() == true){
+            i = 0;
+            a = 0;
+            mate = 1;                     
+            return false;
+          }
         }
-      }
-  //WKing Moves 
-      if (tile[row][column] == WKing){
-        i = row;
-        a = column;        
-         if (wKingMoves() == true){       
-          i = 0;
-          a = 0;
-          mate = 1;                     
-          return false;
-        }
-      }      
-    }
- }
-
-  if (mate == 0) { 
-    return true;
-  }
-  
-}
-//If Black is In check 
-else if (CheckFunction('B') == true){
-
-
-//Run through tiles 
-  for (int column = 0; column < 8; column++){
-
-    for (int row = 0; row < 8; row++){
-  //BPawn Moves
-  if (tile[row][column] == BPawn){
-        i = row;
-        a = column;    
-
-        //If theres possible moves, return false
-        if (bPawnMoves() == true){
-          i = 0;
-          a = 0;
-          mate = 1;                    
-          return false;
-        }
-      }
-  //BRook Moves
-  if (tile[row][column] == BRook){
-        i = row;
-        a = column;    
-         if (bRookMoves() == true){
-          i = 0;
-          a = 0; 
-          mate = 1;                   
-          return false;
-        }
-      }
-  //BKnight Moves
-  if (tile[row][column] == BKnight){
-        i = row;
-        a = column;    
-         if (bKnightMoves() == true){
-          i = 0;
-          a = 0;      
-          mate = 1;              
-          return false;
-        }
-      }      
-  //BBishop Moves
- if (tile[row][column] == BBishop){
-        i = row;
-        a = column;  
-         if (bBishopMoves() == true){
-          i = 0;
-          a = 0;    
-          mate = 1;                
-          return false;
-        }
-      }
-  //BQueen Moves
- if (tile[row][column] == BQueen){
-        i = row;
-        a = column;  
-         if (bQueenMoves() == true){
-          i = 0;
-          a = 0;   
-          mate = 1;                 
-          return false;
-        }
-      }
-  //BKing Moves 
- if (tile[row][column] == BKing){
-
-        i = row;
-        a = column;  
-         if (bKingMoves() == true){         
-          i = 0;
-         a = 0;       
-         mate = 1;             
-          return false;
-       }
+        //WKing Moves 
+        if (tile[row][column] == WKing){
+          i = row;
+          a = column;        
+          if (wKingMoves() == true){       
+            i = 0;
+            a = 0;
+            mate = 1;                     
+            return false;
+          }
+        }      
       }
     }
+    if (mate == 0) { 
+      return true;
+    }
   }
-  if (mate == 0) { 
-    return true;
+  //If Black is In check 
+  else if (CheckFunction('B') == true){
+
+    //Run through tiles 
+    for (int column = 0; column < 8; column++){
+      for (int row = 0; row < 8; row++){
+        //BPawn Moves
+        if (tile[row][column] == BPawn){
+          i = row;
+          a = column;    
+          //If theres possible moves, return false
+          if (bPawnMoves() == true){
+            i = 0;
+            a = 0;
+            mate = 1;                    
+            return false;
+          }
+        }
+        //BRook Moves
+        if (tile[row][column] == BRook){
+          i = row;
+          a = column;    
+          if (bRookMoves() == true){
+            i = 0;
+            a = 0; 
+            mate = 1;                   
+            return false;
+          }
+        }
+        //BKnight Moves
+        if (tile[row][column] == BKnight){
+          i = row;
+          a = column;    
+          if (bKnightMoves() == true){
+            i = 0;
+            a = 0;      
+            mate = 1;              
+            return false;
+          }
+        }      
+          //BBishop Moves
+        if (tile[row][column] == BBishop){
+          i = row;
+          a = column;  
+          if (bBishopMoves() == true){
+            i = 0;
+            a = 0;    
+            mate = 1;                
+            return false;
+          }
+        }
+        //BQueen Moves
+        if (tile[row][column] == BQueen){
+          i = row;
+          a = column;  
+          if (bQueenMoves() == true){
+            i = 0;
+            a = 0;   
+            mate = 1;                 
+            return false;
+          }
+        }
+        //BKing Moves 
+        if (tile[row][column] == BKing){
+          i = row;
+          a = column;  
+          if (bKingMoves() == true){         
+            i = 0;
+            a = 0;       
+            mate = 1;             
+            return false;
+          }
+        }
+      }
+    }
+    if (mate == 0) { 
+      return true;
+    }
   }
-}
-  
   else {
-      return false;
+    return false;
   }
 }
 
@@ -3616,7 +3249,7 @@ short D(short q, short l, short e, unsigned char E, unsigned char z, unsigned ch
   X = myrand() & ~M;                            /* start at random field    */
   while(d++ < n || d < 3 ||                         /* iterative deepening loop */
     z & K == I && (N < T & d < 98 ||            /* root: deepen upto time   */
-                   (K = X, L = Y & ~M, d = 3)))                /* time's up: go do best    */
+                  (K = X, L = Y & ~M, d = 3)))                /* time's up: go do best    */
   { x = B = X;                                   /* start scan at prev. best */
     h = Y & S;                                   /* request try noncastl. 1st*/
     P = d < 3 ? I : D(-l, 1 - l, -e, S, 0, d - 3); /* Search null move         */
@@ -3691,13 +3324,10 @@ C: if (m > I - M | m < M - I)d = 98;           /* mate holds to any depth  */
   }                                             /*    encoded in X S,8 bits */
   k ^= 24;                                     /* change sides back        */
   --Z; return m += m < e;                       /* delayed-loss bonus       */
-
 }
 
 void updateBARray() {
-
-int counter;
-
+  int counter;
   for (int row = 0; row < 8; row++ ) {
     for (int column = 0; column < 8; column++) {
       if (tile[row][column] == WPawn){      
@@ -3796,7 +3426,6 @@ int counter;
 }
 
 void chessMatrixConverter() {
-  
   int prevY = c[0] - 97;
   int prevX = abs(c[1] - '8');
   int postY = c[2] - 97;
@@ -3807,5 +3436,4 @@ void chessMatrixConverter() {
   matrixToArray(postX, postY);
   colourswap1();
   pixels.show();   
-  
 }
