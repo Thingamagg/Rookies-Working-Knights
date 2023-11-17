@@ -57,10 +57,10 @@ class Timer
     
     void writeEeprom();
   
-    void initTimer();
+    void init();
   
   //Arduino loop
-    void loopTimer();
+    void looping();
 
     
   private:

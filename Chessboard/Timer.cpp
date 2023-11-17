@@ -9,9 +9,8 @@
 
   Timer::Timer(int rs, int en, int d4, int d5, int d6, int d7, int buttonWhite, int buttonBlack, int analogPin)
     :
-    lcd(rs, en, d4, d5, d6, d7)
-    {
-    _buttonWhite = buttonWhite;
+    lcd(rs, en, d4, d5, d6, d7){
+    _buttonWhite = buttonWhite ;
     _buttonBlack = buttonBlack;
     _analogPin = analogPin;
     _rs = rs;
@@ -23,14 +22,11 @@
     LiquidCrystal lcd(_rs, _en, _d4, _d5, _d6, _d7);
   } //default constructor
 
-
-
   void Timer::debounceKey() {
     while (adc_key_in < 1000) {
       adc_key_in = analogRead(_analogPin);
     }
   }
-
 
 //keypad code by:
 //https://www.dfrobot.com/wiki/index.php/Arduino_Timer::lcd_KeyPad_Shield_(SKU:_DFR0009)
@@ -62,7 +58,7 @@
 //set up menu
   void Timer::menuSetUp() {
     lcd_key = read_lcd_buttons();  // read the buttons
-    switch (lcd_key)               // depending on which button was pushed, we perform an action
+    switch (Timer::lcd_key)               // depending on which button was pushed, we perform an action
     {
       case btnRIGHT:
         {
@@ -631,7 +627,7 @@
     EEPROM.write(4, sidePlayer);
   }
 
-  void Timer::initTimer() {
+  void Timer::init() {
     //setup pins
     pinMode(_buttonWhite, INPUT); //button white
     pinMode(_buttonBlack, INPUT); //button black
@@ -655,7 +651,8 @@
     digitalWrite(LED_BUILTIN, HIGH);
   
     readEeprom(); //read eeprom values and load to variables
-  
+
+//    UNCOMMENT THIS WHEN TRYING THE TIMER, CODE DOESN'T START UNTIL TIMER STARTS 
 //    while (exitMenu) {    //start set up menu
 //      menuSetUp();        //keypad set up
 //      printMenu();        //print menu values
@@ -676,7 +673,7 @@
 
 
 //Arduino loop
-  void Timer::loopTimer() {
+  void Timer::looping() {
   
     adc_key_in = analogRead(_analogPin); //read keypad
   
