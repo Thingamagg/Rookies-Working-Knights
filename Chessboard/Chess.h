@@ -165,12 +165,12 @@ class Chess
     char sym[17] = {".?pnkbrq?P?NKBRQ"};
     char lastH[5], lastM[5];
     unsigned short ledv=1;
-    char L;
-    char w[8]={0,2,2,7,-1,8,12,23};                             /* relative piece values    */
-    char o[32]={-16,-15,-17,0,1,16,0,1,16,15,17,0,14,18,31,33,0, /* step-vector lists */
+    char L,
+    w[9]={0,2,2,7,-1,8,12,23},                             /* relative piece values    */
+    o[33]={-16,-15,-17,0,1,16,0,1,16,15,17,0,14,18,31,33,0, /* step-vector lists */
         7,-1,11,6,8,3,6,                                 /* 1st dir. in o[] per piece*/
         6,3,5,7,4,5,3,6};                                /* initial piece setup      */
-    char b[129]={     
+    char b[130]={     
       22, 19, 21, 23, 20, 21, 19, 22, 28, 21, 16, 13, 12, 13, 16, 21,
       18, 18, 18, 18, 18, 18, 18, 18, 22, 15, 10,  7,  6,  7, 10, 15,
       0,  0,  0,  0,  0,  0,  0,  0, 18, 11,  6,  3,  2,  3,  6, 11,

@@ -10,9 +10,9 @@ Chess::Chess(int lightsPin, int numLights, int onPin, int cheatPin, int colourPi
             int rowZero, int rowOne, int rowTwo, int rowThree, int rowFour, int rowFive, int rowSix,  int rowSeven,
             int testColumnZero, int testColumnOne, int testColumnTwo, int testColumnThree, int testColumnFour, int testColumnFive, int testColumnSix, int testColumnSeven)
   : 
-  pixels(_numLights, _lightsPin, NEO_GRB + NEO_KHZ800)
+  pixels(numLights, lightsPin, NEO_GRB + NEO_KHZ800)
   {
-    Adafruit_NeoPixel pixels = Adafruit_NeoPixel(numLights, lightsPin, NEO_GRB + NEO_KHZ800);
+
     int _lightsPin = lightsPin;   
     int _numLights = numLights;
 
@@ -54,13 +54,15 @@ Chess::Chess(int lightsPin, int numLights, int onPin, int cheatPin, int colourPi
     int _testColumnFive = testColumnFive;        //analogRead(A5)
     int _testColumnSix = testColumnSix;         //analogRead(A6)
     int _testColumnSeven = testColumnSeven;       //analogRead(A7)  
+
+    Adafruit_NeoPixel pixels = Adafruit_NeoPixel(_numLights, _lightsPin, NEO_GRB + NEO_KHZ800);
   }
 
 
 void Chess::initChess(){
   Serial.begin(115200);
   pixels.begin();
-    
+
   pinMode(_columnZero, OUTPUT);
   pinMode(_columnOne, OUTPUT);
   pinMode(_columnTwo, OUTPUT);
@@ -98,7 +100,7 @@ void Chess::initChess(){
   for (a = 0 ; a<8; a++) {
     for (i = 0 ; i<8; i++) { 
 
-      Chess::resetCheck();
+      resetCheck();
       lastPieceNumber = tile[i][a];
           
       switch (i) {
@@ -128,8 +130,8 @@ void Chess::initChess(){
           break;
         }
         
-      Chess::chooseAnalog(a); 
-      Chess::checkV();
+      chooseAnalog(a); 
+      checkV();
       tile[i][a] = pieceNumber;
       
     }
@@ -156,6 +158,7 @@ void Chess::chessStartUp(){
     c++;
     v--;
     pixels.show();
+    
     delay(20);  
   }  
   }
@@ -166,6 +169,7 @@ void Chess::chessStartUp(){
     z++;
     x--;
     pixels.show();
+    
     delay(20);
   }
   for (int q = 0; q < 32; q++) {
@@ -174,6 +178,7 @@ void Chess::chessStartUp(){
     c++;
     v--;
     pixels.show();
+
     delay(20);  
   }
      //Resetting to Default Once turned off
@@ -228,6 +233,7 @@ void Chess::cheatButtonCheck(){
 }
 
 void Chess::loopChess(){
+
   lastOnState = currentOnState;
   currentOnState = digitalRead(_onPin);
 
@@ -240,19 +246,24 @@ void Chess::loopChess(){
   if (onButton == 1) {
   // Updates matrix to know what is on each tile
     for (a = 0 ; a<8; a++) {
-      if (currentOnState == HIGH && lastOnState == LOW) {
-        break;
-      }
+
+        if (currentOnState == HIGH && lastOnState == LOW) {
+          break;
+        }
+      
       for (i = 0 ; i<8; i++) { 
+      
         if (currentOnState == HIGH && lastOnState == LOW) {
           onButton = !onButton;
           chessStartUp();
           blankLights();
           break;
         }        
+        
         checkColourButton();
         resetCheck();
         lastPieceNumber = tile[i][a];
+            
         switch (i) {
           case 0:
             digitalWrite(_rowZero, LOW);
@@ -278,7 +289,8 @@ void Chess::loopChess(){
           case 7: 
             digitalWrite(_rowSeven, LOW);
             break;
-        }
+          }
+          
         chooseAnalog(a); 
         checkV();
         tile[i][a] = pieceNumber;
@@ -287,35 +299,41 @@ void Chess::loopChess(){
         lastPieceNumber = tile[i][a];
         cheatButtonCheck();        
   
-        if (CheckFunction('W') == true) {
-          if (tile[i][a] == WKing) {
-            matrixToArray(i, a);
-            colourswap3();
-            pixels.show();
-          }
-        }
+    if (CheckFunction('W') == true) {
+      if (tile[i][a] == WKing) {
+        matrixToArray(i, a);
+        colourswap3();
+        pixels.show();
+      }
+    }
   
-        if (CheckFunction('B') == true) {
-          if (tile[i][a] == BKing) {
-            matrixToArray(i, a);
-            colourswap3();
-            pixels.show();
-          }
-        }
+    if (CheckFunction('B') == true) {
+      if (tile[i][a] == BKing) {
+        matrixToArray(i, a);
+        colourswap3();
+        pixels.show();
       }
-      Serial.println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+    }
+  }
 
-      for (int j = 0; j < 8; j++){
-        for (int k = 0; k < 8; k++){
-          Serial.print(tile[j][k]);
-          Serial.print("\t");
-        }
-        Serial.println("");
-      }
-      Serial.println("++++++++++++++++++++++++++++");
-      //delay(100);        
+  Serial.println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+
+  for (int j = 0; j < 8; j++)
+  {
+    for (int k = 0; k < 8; k++)
+    {
+      
+      Serial.print(tile[j][k]);
+      Serial.print("\t");
+    }
+    Serial.println("");
+  }
+  Serial.println("++++++++++++++++++++++++++++");
+  //delay(100);        
+
     }  
-    if (Checkmate() == true){
+
+      if (Checkmate() == true){
       Serial.println("Checkmate");
       for(int i=0;i<_numLights;i++){
         // pixels.Color takes RGB values, from 0,0,0 up to 255,255,255
@@ -323,7 +341,7 @@ void Chess::loopChess(){
         colourswap3(); // Moderately bright green color.
         pixels.show(); // This sends the updated pixel color to the hardware.
         delay(50);
-      }
+    }
     blankLights(); 
     }    
   }
@@ -3598,4 +3616,3 @@ void Chess::chessMatrixConverter() {
   pixels.show();   
   
 }
-

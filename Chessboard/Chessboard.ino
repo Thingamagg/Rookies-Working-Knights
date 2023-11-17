@@ -38,8 +38,6 @@ const int colourPin1 = 29; // the 3 buttons to change colours
 const int colourPin2 = 27;
 const int colourPin3 = 25;
 
-//for LED
-Adafruit_NeoPixel pixels = Adafruit_NeoPixel(numLights, lightsPin, NEO_GRB + NEO_KHZ800);
 
 
 //Digital Pins
@@ -102,12 +100,13 @@ Chess chess(lightsPin, numLights, onPin, cheatPin, colourPin1, colourPin2, colou
 
 
 void setup() {
-  timer.initTimer();
   chess.initChess();
+  timer.initTimer();
+
 }
 
  
 void loop() {
-  timer.loopTimer();
-  chess.loopChess();
+    timer.loopTimer();
+    chess.loopChess();
 }
